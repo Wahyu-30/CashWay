@@ -58,15 +58,30 @@ struct ReportsView: View {
     private var monthNavigator: some View {
         HStack {
             Button { prevMonth() } label: {
-                Image(systemName: "chevron.left").foregroundStyle(Color.cwTextSecondary)
+                Image(systemName: "chevron.left")
+                    .font(.title3.bold())
+                    .foregroundStyle(Color.cwTextSecondary)
+                    .padding(.horizontal, CWSpacing.sm)
             }
+            .buttonStyle(.plain)
+
             Spacer()
-            Text(monthTitle).font(.footnote.weight(.semibold)).foregroundStyle(Color.cwTextPrimary)
+            
+            Text(monthTitle)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color.cwTextPrimary)
+                
             Spacer()
+            
             Button { nextMonth() } label: {
-                Image(systemName: "chevron.right").foregroundStyle(Color.cwTextSecondary)
+                Image(systemName: "chevron.right")
+                    .font(.title3.bold())
+                    .foregroundStyle(Color.cwTextSecondary)
+                    .padding(.horizontal, CWSpacing.sm)
             }
+            .buttonStyle(.plain)
         }
+        .padding(.vertical, CWSpacing.sm)
     }
 
     // MARK: - Summary Cards

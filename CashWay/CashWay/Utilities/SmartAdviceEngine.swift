@@ -20,7 +20,7 @@ struct SmartAdviceEngine {
         let monthTx = monthlyTransactions(from: transactions)
         let totalExpense  = sum(monthTx, type: .expense)
         let totalIncome   = sum(monthTx, type: .income)
-        let salaryIncome  = salarySum(monthTx)
+        let _ = salarySum(monthTx)
         let freelanceIncome = freelanceSum(monthTx)
 
         var advices: [SmartAdvice] = []
