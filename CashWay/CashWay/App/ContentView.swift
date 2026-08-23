@@ -151,6 +151,9 @@ struct ContentView: View {
             .background(Color.cwSurface)
         } detail: {
             destination(for: selectedTab)
+                .font(.system(size: 15))
+                .environment(\.controlSize, .large)
+                .environment(\.defaultMinListRowHeight, 52)
         }
         .navigationSplitViewStyle(.balanced)
     }
