@@ -49,7 +49,7 @@ Dibuat dengan **SwiftUI + SwiftData** — teknologi terbaru Apple yang memungkin
 ### 1. Clone / Download Project
 ```bash
 # Jika menggunakan Git
-git clone https://github.com/username/cashway.git
+git clone https://github.com/Wahyu-30/CashWay.git
 
 # Atau download ZIP dan extract ke folder yang diinginkan
 ```
@@ -113,6 +113,28 @@ CashWay/
     ├── ROADMAP.md
     └── AGENT.md
 ```
+
+---
+
+## 📈 Status Pengerjaan (Progress)
+
+Saat ini CashWay telah menyelesaikan **Fase 1 (Core MVP)** dan sudah bisa digunakan dengan lancar di Mac dan iPhone.
+
+✅ **Selesai:**
+- Setup Xcode Project (SwiftUI + SwiftData)
+- Schema database (Transaction, Budget, Category, Wallet)
+- Tampilan Dashboard dengan grafik pengeluaran
+- Fitur input & hapus transaksi
+- Fitur limit Budget per kategori
+- *Smart Advice Engine* (Memberi peringatan/saran berdasarkan gaji pokok vs pengeluaran)
+- Optimasi UI/UX khusus macOS (Sidebar, Teks responsif)
+- Sinkronisasi dengan GitHub repo
+
+⏳ **Akan Datang (Fase 2 & 3):**
+- Filter riwayat transaksi secara mendalam
+- Export laporan keuangan bulanan (PDF/CSV)
+- Sinkronisasi iCloud otomatis antar device (Mac ↔ iPhone)
+- Fitur Multi-wallet (Bank, Tunai, e-Wallet)
 
 ---
 
