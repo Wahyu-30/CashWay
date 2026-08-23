@@ -181,7 +181,7 @@ struct BudgetRowView: View {
                             in: RoundedRectangle(cornerRadius: CWRadius.sm)
                         )
                     Text(budget.category?.name ?? "Kategori")
-                        .font(.footnote.weight(.semibold)).foregroundStyle(Color.cwTextPrimary)
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Color.cwTextPrimary)
                 }
                 Spacer()
                 // Status badge
@@ -191,7 +191,7 @@ struct BudgetRowView: View {
             // Amount info
             HStack {
                 Text(CurrencyFormatter.format(budget.spent))
-                    .font(.caption.bold())
+                    .font(.footnote.bold())
                     .foregroundStyle(Color(hex: budget.status.colorHex))
                     .monospacedDigit()
                 Text("dari \(CurrencyFormatter.format(budget.amount))")
@@ -199,7 +199,7 @@ struct BudgetRowView: View {
                     .monospacedDigit()
                 Spacer()
                 Text("\(Int(min(budget.percentage * 100, 999)))%")
-                    .font(.caption.bold())
+                    .font(.footnote.bold())
                     .foregroundStyle(Color(hex: budget.status.colorHex))
             }
 

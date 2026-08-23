@@ -104,7 +104,7 @@ struct ReportsView: View {
         VStack(alignment: .leading, spacing: CWSpacing.xs) {
             Text(label).font(.caption).foregroundStyle(Color.cwTextSecondary)
             Text(CurrencyFormatter.format(amount))
-                .font(.footnote.bold()).foregroundStyle(color).monospacedDigit()
+                .font(.subheadline.bold()).foregroundStyle(color).monospacedDigit()
         }
         .frame(maxWidth: fullWidth ? .infinity : nil, alignment: .leading)
         .padding(CWSpacing.md)
@@ -116,7 +116,7 @@ struct ReportsView: View {
     private var categoryChart: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Distribusi Pengeluaran")
-                .font(.footnote.weight(.semibold)).foregroundStyle(Color.cwTextSecondary)
+                .font(.subheadline.weight(.semibold)).foregroundStyle(Color.cwTextSecondary)
 
             Chart(expenseByCategory, id: \.name) { item in
                 SectorMark(
@@ -137,7 +137,7 @@ struct ReportsView: View {
     private var categoryTable: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Rincian per Kategori")
-                .font(.footnote.weight(.semibold)).foregroundStyle(Color.cwTextSecondary)
+                .font(.subheadline.weight(.semibold)).foregroundStyle(Color.cwTextSecondary)
 
             if expenseByCategory.isEmpty {
                 Text("Belum ada pengeluaran bulan ini")
@@ -150,12 +150,12 @@ struct ReportsView: View {
                     ForEach(expenseByCategory, id: \.name) { item in
                         HStack {
                             Circle().fill(Color(hex: item.colorHex)).frame(width: 10, height: 10)
-                            Text(item.name).font(.footnote).foregroundStyle(Color.cwTextPrimary)
+                            Text(item.name).font(.subheadline).foregroundStyle(Color.cwTextPrimary)
                             Spacer()
                             Text(CurrencyFormatter.format(Decimal(item.amount)))
-                                .font(.caption.bold()).foregroundStyle(Color.cwExpense).monospacedDigit()
+                                .font(.footnote.bold()).foregroundStyle(Color.cwExpense).monospacedDigit()
                             Text(totalExpense > 0 ? "\(Int(item.amount / NSDecimalNumber(decimal: totalExpense).doubleValue * 100))%" : "")
-                                .font(.caption2).foregroundStyle(Color.cwTextSecondary).frame(width: 35, alignment: .trailing)
+                                .font(.caption).foregroundStyle(Color.cwTextSecondary).frame(width: 35, alignment: .trailing)
                         }
                         .padding(.horizontal, CWSpacing.md)
                         .padding(.vertical, CWSpacing.sm)

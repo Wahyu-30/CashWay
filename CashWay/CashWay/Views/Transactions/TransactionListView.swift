@@ -70,7 +70,7 @@ struct TransactionListView: View {
                         Text(group.date.formatted(.dateTime
                             .day().month(.wide).year()
                             .locale(Locale(identifier: "id_ID"))))
-                            .font(.caption.bold())
+                            .font(.footnote.bold())
                             .foregroundStyle(Color.cwTextSecondary)
                             .textCase(nil)
                     }
@@ -109,7 +109,7 @@ struct TransactionListView: View {
     private func filterChip(label: String, isActive: Bool, color: Color = .cwAccent, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.caption.weight(.semibold))
+                .font(.footnote.weight(.semibold))
                 .padding(.horizontal, CWSpacing.sm)
                 .padding(.vertical, CWSpacing.xs)
                 .background(isActive ? color : Color.cwSurface, in: Capsule())
@@ -163,7 +163,7 @@ struct TransactionRowView: View {
             // Info
             VStack(alignment: .leading, spacing: 2) {
                 Text(transaction.category?.name ?? "Tidak ada kategori")
-                    .font(.footnote.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.cwTextPrimary)
 
                 HStack(spacing: CWSpacing.xs) {
@@ -178,12 +178,12 @@ struct TransactionRowView: View {
                     }
                     if !transaction.note.isEmpty {
                         Text(transaction.note)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(Color.cwTextSecondary)
                             .lineLimit(1)
                     }
                     Text(transaction.date.formatted(.dateTime.hour().minute()))
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(Color.cwPlaceholder)
                 }
             }
@@ -192,7 +192,7 @@ struct TransactionRowView: View {
 
             // Amount
             Text(CurrencyFormatter.formatSigned(transaction.amount, type: transaction.type))
-                .font(.footnote.bold())
+                .font(.subheadline.bold())
                 .foregroundStyle(amountColor)
                 .monospacedDigit()
         }

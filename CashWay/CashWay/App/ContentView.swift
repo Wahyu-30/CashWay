@@ -151,9 +151,9 @@ struct ContentView: View {
             .background(Color.cwSurface)
         } detail: {
             destination(for: selectedTab)
-                .font(.system(size: 15))
+                .environment(\.dynamicTypeSize, .xxLarge) // Perbesar semua teks secara proporsional
                 .environment(\.controlSize, .large)
-                .environment(\.defaultMinListRowHeight, 52)
+                .environment(\.defaultMinListRowHeight, 56)
         }
         .navigationSplitViewStyle(.balanced)
     }

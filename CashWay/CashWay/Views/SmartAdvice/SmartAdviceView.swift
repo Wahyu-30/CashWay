@@ -45,7 +45,7 @@ struct SmartAdviceView: View {
             Text("Analisis bulan ini")
                 .font(.caption).foregroundStyle(Color.cwTextSecondary)
             Text("\(advices.filter { $0.priority == .high }.count) peringatan · \(advices.count) saran total")
-                .font(.footnote.weight(.semibold)).foregroundStyle(Color.cwTextPrimary)
+                .font(.subheadline.weight(.semibold)).foregroundStyle(Color.cwTextPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -94,7 +94,7 @@ struct AdviceCard: View {
                             .foregroundStyle(Color(hex: "#FF6B6B"))
                     }
                     Text(advice.title)
-                        .font(.footnote.weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.cwTextPrimary)
                 }
             }
@@ -111,7 +111,7 @@ struct AdviceCard: View {
                     // TODO: navigate to relevant screen
                 } label: {
                     Text(action)
-                        .font(.caption.bold())
+                        .font(.footnote.bold())
                         .foregroundStyle(Color(hex: advice.type.accentColorHex))
                         .padding(.horizontal, CWSpacing.sm)
                         .padding(.vertical, CWSpacing.xs)

@@ -200,7 +200,7 @@ struct AddTransactionView: View {
                 Image(systemName: wallet.icon)
                     .foregroundStyle(Color(hex: wallet.colorHex))
                 Text(wallet.name)
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(isSelected ? .white : Color.cwTextPrimary)
             }
             .padding(.horizontal, CWSpacing.sm)

@@ -61,14 +61,18 @@ struct DashboardView: View {
             // Month navigator
             HStack(spacing: CWSpacing.sm) {
                 Button { vm.prevMonth() } label: {
-                    Image(systemName: "chevron.left").font(.footnote.bold())
+                    Image(systemName: "chevron.left").font(.title3.bold()).padding(.horizontal, 4)
                 }
+                .buttonStyle(.plain)
+                
                 Text(vm.monthTitle)
-                    .font(.footnote.weight(.semibold))
-                    .frame(minWidth: 100)
+                    .font(.title3.weight(.bold))
+                    .frame(minWidth: 120)
+                    
                 Button { vm.nextMonth() } label: {
-                    Image(systemName: "chevron.right").font(.footnote.bold())
+                    Image(systemName: "chevron.right").font(.title3.bold()).padding(.horizontal, 4)
                 }
+                .buttonStyle(.plain)
                 .disabled(!vm.canGoForward)
             }
             .foregroundStyle(Color.cwTextSecondary)
@@ -117,9 +121,9 @@ struct DashboardView: View {
                 .foregroundStyle(color)
                 .font(.caption)
             VStack(alignment: .leading, spacing: 0) {
-                Text(label).font(.caption2).foregroundStyle(Color.cwTextSecondary)
+                Text(label).font(.caption).foregroundStyle(Color.cwTextSecondary)
                 Text(CurrencyFormatter.formatCompact(amount))
-                    .font(.footnote.bold()).foregroundStyle(color)
+                    .font(.subheadline.bold()).foregroundStyle(color)
                     .monospacedDigit()
             }
         }
@@ -132,7 +136,7 @@ struct DashboardView: View {
     private var incomeBreakdownSection: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Sumber Pemasukan")
-                .font(.footnote.weight(.semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.cwTextSecondary)
 
             HStack(spacing: CWSpacing.sm) {
@@ -161,9 +165,9 @@ struct DashboardView: View {
                 .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: CWRadius.sm))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(label).font(.caption2).foregroundStyle(Color.cwTextSecondary)
+                Text(label).font(.caption).foregroundStyle(Color.cwTextSecondary)
                 Text(amount > 0 ? CurrencyFormatter.formatCompact(amount) : "Belum ada")
-                    .font(.footnote.bold())
+                    .font(.subheadline.bold())
                     .foregroundStyle(amount > 0 ? color : Color.cwPlaceholder)
                     .monospacedDigit()
             }
@@ -179,7 +183,7 @@ struct DashboardView: View {
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Pengeluaran Harian")
-                .font(.footnote.weight(.semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.cwTextSecondary)
 
             if vm.dailyExpenses.isEmpty || vm.dailyExpenses.allSatisfy({ $0.amount == 0 }) {
@@ -203,7 +207,7 @@ struct DashboardView: View {
                         AxisValueLabel {
                             if let v = value.as(Double.self) {
                                 Text(CurrencyFormatter.formatCompact(Decimal(v)))
-                                    .font(.caption2)
+                                    .font(.caption)
                             }
                         }
                     }
@@ -237,10 +241,10 @@ struct DashboardView: View {
                     .foregroundStyle(vm.hasHighPriorityAdvice ? Color.cwExpense : Color.cwWarning)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(vm.hasHighPriorityAdvice ? "Ada peringatan keuangan" : "Saran keuangan tersedia")
-                        .font(.footnote.weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.cwTextPrimary)
                     Text("\(vm.smartAdvices.count) saran · Ketuk untuk lihat detail")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(Color.cwTextSecondary)
                 }
                 Spacer()
@@ -266,7 +270,7 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             HStack {
                 Text("Transaksi Terakhir")
-                    .font(.footnote.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.cwTextSecondary)
                 Spacer()
             }
