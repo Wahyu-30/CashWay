@@ -142,19 +142,27 @@ struct DashboardView: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.cwTextSecondary)
 
-            HStack(spacing: CWSpacing.sm) {
-                incomeSourceCard(
-                    label:  "Gaji Kantor",
-                    amount: vm.salaryIncome,
-                    icon:   "building.2.fill",
-                    color:  .cwAccent
-                )
-                incomeSourceCard(
-                    label:  "Freelance",
-                    amount: vm.freelanceIncome,
-                    icon:   "video.fill",
-                    color:  .cwFreelance
-                )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: CWSpacing.sm) {
+                    incomeSourceCard(
+                        label:  "Gaji Kantor",
+                        amount: vm.salaryIncome,
+                        icon:   "building.2.fill",
+                        color:  .cwAccent
+                    )
+                    incomeSourceCard(
+                        label:  "Freelance",
+                        amount: vm.freelanceIncome,
+                        icon:   "video.fill",
+                        color:  .cwFreelance
+                    )
+                    incomeSourceCard(
+                        label:  "Orang Tua",
+                        amount: vm.parentsIncome,
+                        icon:   "figure.2.arms.open",
+                        color:  Color(hex: "#ff33aa") // Tag Hot Pink
+                    )
+                }
             }
         }
     }
@@ -179,7 +187,7 @@ struct DashboardView: View {
         .padding(CWSpacing.sm)
         .background(Color.cwSurface, in: RoundedRectangle(cornerRadius: CWRadius.md))
         .overlay(RoundedRectangle(cornerRadius: CWRadius.md).stroke(Color.cwBorder, lineWidth: 1))
-        .frame(maxWidth: .infinity)
+        .frame(minWidth: 150, maxWidth: .infinity)
     }
 
     // MARK: - Bar Chart

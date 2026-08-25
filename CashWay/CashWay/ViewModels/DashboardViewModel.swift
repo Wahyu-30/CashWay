@@ -57,6 +57,12 @@ final class DashboardViewModel {
             .reduce(0) { $0 + $1.amount }
     }
 
+    var parentsIncome: Decimal {
+        monthTransactions
+            .filter { $0.type == .income && $0.incomeTag == .parents }
+            .reduce(0) { $0 + $1.amount }
+    }
+
     var otherIncome: Decimal {
         monthTransactions
             .filter { $0.type == .income && ($0.incomeTag == .other || $0.incomeTag == nil) }

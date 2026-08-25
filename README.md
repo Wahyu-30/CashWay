@@ -140,9 +140,9 @@ Saat ini CashWay telah menyelesaikan **Fase 1 (Core MVP)** dan sudah bisa diguna
 
 ## 🎨 Design System
 
-- **Tema default**: Dark Mode
-- **Background**: `#0F0F14` (Charcoal Malam)
-- **Accent**: `#00C9A7` (Teal Emerald)
+- **Tema default**: Dark Mode (Copilot Money Style)
+- **Background**: `#000814` (Midnight Canvas)
+- **Accent**: `#1c6cff` (Signal Blue)
 - **Income**: `#4CAF82` (Emerald Green)
 - **Expense**: `#FF6B6B` (Coral Red)
 - **Typography**: SF Pro (system font Apple)

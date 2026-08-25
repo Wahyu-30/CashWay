@@ -88,6 +88,7 @@ final class Transaction {
         case bonus     = "bonus"      // Bonus / THR
         case rental    = "rental"     // Penyewaan alat kamera/video
         case invest    = "invest"     // Hasil investasi
+        case parents   = "parents"    // Pemberian Orang Tua
         case other     = "other"      // Pemasukan lainnya
 
         var displayName: String {
@@ -97,6 +98,7 @@ final class Transaction {
             case .bonus:     return "Bonus / THR"
             case .rental:    return "Sewa Alat"
             case .invest:    return "Investasi"
+            case .parents:   return "Dari Orang Tua"
             case .other:     return "Lainnya"
             }
         }
@@ -108,6 +110,7 @@ final class Transaction {
             case .bonus:     return "gift.fill"
             case .rental:    return "camera.fill"
             case .invest:    return "chart.line.uptrend.xyaxis"
+            case .parents:   return "figure.2.arms.open"
             case .other:     return "dollarsign.circle.fill"
             }
         }
