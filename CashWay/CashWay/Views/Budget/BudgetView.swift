@@ -17,7 +17,11 @@ struct BudgetView: View {
     @State private var selectedMonth: Int  = Calendar.current.component(.month, from: .now)
     @State private var selectedYear:  Int  = Calendar.current.component(.year,  from: .now)
     @State private var showAddBudget: Bool = false
+    @State private var showWizard: Bool = false
     @State private var editingBudget: Budget? = nil
+
+    // Untuk fitur Auto Wizard
+    @Query private var transactions: [Transaction]
 
     private var monthBudgets: [Budget] {
         budgets.filter { $0.month == selectedMonth && $0.year == selectedYear }
@@ -30,6 +34,20 @@ struct BudgetView: View {
         ScrollView {
             VStack(spacing: CWSpacing.md) {
                 monthNavigator
+                
+                Button { showWizard = true } label: {
+                    HStack {
+                        Image(systemName: "wand.and.stars")
+                        Text("Auto-Budget Wizard")
+                    }
+                    .font(.caption.bold())
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(LinearGradient(colors: [Color.cwAccent, Color(hex: "#9019e6")], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: CWRadius.md))
+                    .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                
                 overallSummary
                 if monthBudgets.isEmpty { emptyState } else { budgetList }
             }
@@ -47,6 +65,50 @@ struct BudgetView: View {
         }
         .sheet(isPresented: $showAddBudget) { AddBudgetSheet(month: selectedMonth, year: selectedYear) }
         .sheet(item: $editingBudget) { budget in AddBudgetSheet(editingBudget: budget) }
+        .sheet(isPresented: $showWizard) {
+            BudgetWizardSheet(
+                month: selectedMonth,
+                year: selectedYear,
+                income: calculateIncome(),
+                expenseData: calculateHistoricalData()
+            )
+        }
+    }
+    
+    // MARK: - Helper for Wizard
+    private func calculateIncome() -> Decimal {
+        let cal = Calendar.current
+        let currentTx = transactions.filter {
+            let m = cal.component(.month, from: $0.date)
+            let y = cal.component(.year, from: $0.date)
+            return m == selectedMonth && y == selectedYear && $0.type == .income
+        }
+        return currentTx.reduce(0) { $0 + $1.amount }
+    }
+    
+    private func calculateHistoricalData() -> [(category: Category, avgAmount: Decimal)] {
+        let cal = Calendar.current
+        
+        // Cari transaksi 3 bulan terakhir sebelum bulan yang dipilih
+        guard let currentDate = cal.date(from: DateComponents(year: selectedYear, month: selectedMonth)),
+              let pastDate = cal.date(byAdding: .month, value: -3, to: currentDate) else { return [] }
+        
+        let pastTx = transactions.filter {
+            $0.type == .expense && $0.date >= pastDate && $0.date < currentDate && $0.category != nil
+        }
+        
+        var dict: [UUID: (cat: Category, sum: Decimal)] = [:]
+        for tx in pastTx {
+            if let cat = tx.category {
+                let current = dict[cat.id]?.sum ?? 0
+                dict[cat.id] = (cat, current + tx.amount)
+            }
+        }
+        
+        return dict.values.map {
+            // Dibagi 3 untuk rata-rata 3 bulan
+            (category: $0.cat, avgAmount: $0.sum / 3)
+        }.sorted { $0.avgAmount > $1.avgAmount }
     }
 
     // MARK: - Month Navigator
