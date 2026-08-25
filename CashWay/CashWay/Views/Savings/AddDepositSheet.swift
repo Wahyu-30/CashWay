@@ -122,8 +122,8 @@ struct AddDepositSheet: View {
             type: .expense,
             date: .now,
             note: "Setor Tabungan: \(goal.name)",
-            wallet: defaultWallet,
-            category: cat
+            category: cat,
+            wallet: defaultWallet
         )
         
         modelContext.insert(tx)
