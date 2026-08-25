@@ -54,20 +54,6 @@ struct DefaultData {
     /// Panggil di CashWayApp.swift → .onAppear { DefaultData.seedIfNeeded(context: ...) }
     /// Fungsi ini cek dulu apakah data sudah ada, jika ya → skip.
     static func seedIfNeeded(context: ModelContext) {
-        // Seed Savings Goal Example jika masih kosong
-        let goalDesc = FetchDescriptor<SavingsGoal>()
-        if (try? context.fetch(goalDesc))?.isEmpty == true {
-            context.insert(SavingsGoal(
-                name: "Monitor Kerja",
-                targetAmount: 3_500_000,
-                currentAmount: 0,
-                targetDate: Calendar.current.date(byAdding: .month, value: 3, to: .now),
-                icon: "display",
-                colorHex: "#1c6cff"
-            ))
-            try? context.save()
-        }
-
         let descriptor = FetchDescriptor<Category>()
         let existingCategories = (try? context.fetch(descriptor)) ?? []
         
