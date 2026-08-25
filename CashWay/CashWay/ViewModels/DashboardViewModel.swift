@@ -98,6 +98,33 @@ final class DashboardViewModel {
         }
     }
 
+    var dailyIncome: [(day: Int, amount: Double)] {
+        guard let range = Calendar.current.range(of: .day, in: .month, for: currentMonthDate) else {
+            return []
+        }
+        let cal = Calendar.current
+        return range.map { day in
+            let total = monthTransactions
+                .filter { t in
+                    t.type == .income &&
+                    cal.component(.day, from: t.date) == day
+                }
+                .reduce(Decimal(0)) { $0 + $1.amount }
+            return (day: day, amount: NSDecimalNumber(decimal: total).doubleValue)
+        }
+    }
+
+    // Apakah total pengeluaran melebihi total pemasukan?
+    var isOverspending: Bool {
+        totalExpense > totalIncome && totalIncome > 0
+    }
+
+    // Persentase pengeluaran terhadap pemasukan
+    var spendingRatio: Double {
+        guard totalIncome > 0 else { return 0 }
+        return NSDecimalNumber(decimal: totalExpense / totalIncome).doubleValue
+    }
+
     // MARK: - Smart Advisory
     var smartAdvices: [SmartAdvice] {
         SmartAdviceEngine(

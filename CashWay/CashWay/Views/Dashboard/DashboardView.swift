@@ -21,12 +21,13 @@ struct DashboardView: View {
             VStack(spacing: CWSpacing.lg) {
                 SlideInCard(index: 0) { headerSection }
                 SlideInCard(index: 1) { balanceCard }
-                SlideInCard(index: 2) { incomeBreakdownSection }
-                SlideInCard(index: 3) { chartSection }
+                SlideInCard(index: 2) { overspendingBanner }
+                SlideInCard(index: 3) { incomeBreakdownSection }
+                SlideInCard(index: 4) { chartSection }
                 if !vm.smartAdvices.isEmpty {
-                    SlideInCard(index: 4) { adviceSection }
+                    SlideInCard(index: 5) { adviceSection }
                 }
-                SlideInCard(index: 5) { recentTransactionsSection }
+                SlideInCard(index: 6) { recentTransactionsSection }
             }
             .padding(.horizontal, CWSpacing.md)
             .padding(.bottom, CWSpacing.xxl)
@@ -191,26 +192,135 @@ struct DashboardView: View {
     }
 
     // MARK: - Bar Chart
+    // MARK: - Overspending Warning Banner
+    private var overspendingBanner: some View {
+        Group {
+            if vm.isOverspending {
+                HStack(spacing: CWSpacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("⚠️ Pengeluaran Melebihi Pemasukan!")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.white)
+                        Text("Pengeluaran kamu \(CurrencyFormatter.format(vm.totalExpense)) sudah melampaui pemasukan \(CurrencyFormatter.format(vm.totalIncome)) bulan ini.")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                    Spacer()
+                }
+                .padding(CWSpacing.md)
+                .background(
+                    LinearGradient(colors: [Color(hex: "#c0392b"), Color(hex: "#922b21")],
+                                   startPoint: .leading, endPoint: .trailing),
+                    in: RoundedRectangle(cornerRadius: CWRadius.md)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: CWRadius.md)
+                        .stroke(Color.cwExpense.opacity(0.6), lineWidth: 1)
+                )
+            } else if vm.spendingRatio > 0.8 && vm.totalIncome > 0 {
+                HStack(spacing: CWSpacing.sm) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("🔶 Hati-hati, hampir melebihi batas!")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.white)
+                        Text("Pengeluaran sudah \(Int(vm.spendingRatio * 100))% dari pemasukan bulan ini. Sisanya \(CurrencyFormatter.format(vm.totalIncome - vm.totalExpense)).")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                    Spacer()
+                }
+                .padding(CWSpacing.md)
+                .background(
+                    LinearGradient(colors: [Color(hex: "#d35400"), Color(hex: "#a04000")],
+                                   startPoint: .leading, endPoint: .trailing),
+                    in: RoundedRectangle(cornerRadius: CWRadius.md)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: CWRadius.md)
+                        .stroke(Color.cwWarning.opacity(0.6), lineWidth: 1)
+                )
+            }
+        }
+    }
+
+    // MARK: - Income vs Expense Chart
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
-            Text("Pengeluaran Harian")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.cwTextSecondary)
+            HStack {
+                Text("Pemasukan vs Pengeluaran")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.cwTextSecondary)
+                Spacer()
+                // Legend
+                HStack(spacing: CWSpacing.sm) {
+                    legendDot(color: .cwIncome, label: "Masuk")
+                    legendDot(color: .cwExpense, label: "Keluar")
+                }
+            }
 
-            if vm.dailyExpenses.isEmpty || vm.dailyExpenses.allSatisfy({ $0.amount == 0 }) {
+            // Spending ratio progress bar
+            if vm.totalIncome > 0 {
+                VStack(alignment: .leading, spacing: 4) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.cwSurface)
+                                .frame(height: 8)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(vm.isOverspending ? Color.cwExpense : (vm.spendingRatio > 0.8 ? Color.cwWarning : Color.cwIncome))
+                                .frame(width: geo.size.width * min(CGFloat(vm.spendingRatio), 1.0), height: 8)
+                                .animation(.spring(response: 0.6), value: vm.spendingRatio)
+                        }
+                    }
+                    .frame(height: 8)
+                    Text("\(Int(vm.spendingRatio * 100))% dari pemasukan sudah terpakai")
+                        .font(.caption)
+                        .foregroundStyle(vm.isOverspending ? Color.cwExpense : Color.cwTextSecondary)
+                }
+                .padding(.bottom, CWSpacing.xs)
+            }
+
+            let hasData = !vm.dailyExpenses.allSatisfy({ $0.amount == 0 }) || !vm.dailyIncome.allSatisfy({ $0.amount == 0 })
+
+            if !hasData {
                 chartEmptyState
             } else {
-                Chart(vm.dailyExpenses, id: \.day) { item in
-                    BarMark(
-                        x: .value("Hari", item.day),
-                        y: .value("Pengeluaran", item.amount)
-                    )
-                    .foregroundStyle(Color.cwExpense.gradient)
-                    .cornerRadius(3)
+                Chart {
+                    ForEach(vm.dailyIncome, id: \.day) { item in
+                        if item.amount > 0 {
+                            BarMark(
+                                x: .value("Hari", item.day),
+                                y: .value("Jumlah", item.amount),
+                                width: .fixed(6)
+                            )
+                            .foregroundStyle(Color.cwIncome.gradient)
+                            .position(by: .value("Tipe", "Masuk"))
+                            .cornerRadius(3)
+                        }
+                    }
+                    ForEach(vm.dailyExpenses, id: \.day) { item in
+                        if item.amount > 0 {
+                            BarMark(
+                                x: .value("Hari", item.day),
+                                y: .value("Jumlah", item.amount),
+                                width: .fixed(6)
+                            )
+                            .foregroundStyle(Color.cwExpense.gradient)
+                            .position(by: .value("Tipe", "Keluar"))
+                            .cornerRadius(3)
+                        }
+                    }
                 }
                 .chartXAxis {
                     AxisMarks(values: .stride(by: 5)) { value in
-                        AxisValueLabel { if let v = value.as(Int.self) { Text("\(v)") } }
+                        AxisValueLabel { if let v = value.as(Int.self) { Text("\(v)").font(.caption2) } }
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.3))
                     }
                 }
                 .chartYAxis {
@@ -218,15 +328,23 @@ struct DashboardView: View {
                         AxisValueLabel {
                             if let v = value.as(Double.self) {
                                 Text(CurrencyFormatter.formatCompact(Decimal(v)))
-                                    .font(.caption)
+                                    .font(.caption2)
                             }
                         }
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.3, dash: [3]))
                     }
                 }
-                .frame(height: 160)
+                .frame(height: 180)
                 .padding(CWSpacing.sm)
                 .background(Color.cwSurface, in: RoundedRectangle(cornerRadius: CWRadius.md))
             }
+        }
+    }
+
+    private func legendDot(color: Color, label: String) -> some View {
+        HStack(spacing: 4) {
+            Circle().fill(color).frame(width: 8, height: 8)
+            Text(label).font(.caption).foregroundStyle(Color.cwTextSecondary)
         }
     }
 
