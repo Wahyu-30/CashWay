@@ -38,7 +38,8 @@ struct DefaultData {
         ("Bonus",                "star.fill",                 "#FDCB6E", 2),
         ("Investasi",            "chart.line.uptrend.xyaxis", "#55EFC4", 3),
         ("Hadiah / Uang Masuk",  "gift.fill",                 "#FD79A8", 4),
-        ("Lainnya",              "ellipsis.circle.fill",      "#8B8FA8", 5),
+        ("Dari Orang Tua",       "figure.2.arms.open",        "#ff33aa", 5),
+        ("Lainnya",              "ellipsis.circle.fill",      "#8B8FA8", 6),
     ]}
 
     // MARK: - Default Wallets
@@ -53,11 +54,27 @@ struct DefaultData {
     /// Panggil di CashWayApp.swift → .onAppear { DefaultData.seedIfNeeded(context: ...) }
     /// Fungsi ini cek dulu apakah data sudah ada, jika ya → skip.
     static func seedIfNeeded(context: ModelContext) {
-        // Cek apakah kategori sudah ada
         let descriptor = FetchDescriptor<Category>()
-        guard (try? context.fetch(descriptor))?.isEmpty == true else { return }
+        let existingCategories = (try? context.fetch(descriptor)) ?? []
+        
+        // Update kategori lama agar selalu punya "Dari Orang Tua" (migration)
+        if !existingCategories.isEmpty {
+            let hasOrangTua = existingCategories.contains { $0.name == "Dari Orang Tua" }
+            if !hasOrangTua {
+                context.insert(Category(
+                    name:      "Dari Orang Tua",
+                    icon:      "figure.2.arms.open",
+                    colorHex:  "#ff33aa",
+                    type:      .income,
+                    isDefault: true,
+                    sortOrder: 5
+                ))
+                try? context.save()
+            }
+            return
+        }
 
-        // Seed expense categories
+        // Seed expense categories (hanya jalan jika kosong)
         for cat in expenseCategories {
             context.insert(Category(
                 name:      cat.name,
