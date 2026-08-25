@@ -122,6 +122,7 @@ final class Transaction {
             case .bonus:     return "#E76F51"
             case .rental:    return "#2A9D8F"
             case .invest:    return "#264653"
+            case .parents:   return "#ff33aa"
             case .other:     return "#8B8FA8"
             }
         }
