@@ -19,6 +19,7 @@ struct CashWayApp: App {
             Category.self,
             Wallet.self,
             Budget.self,
+            SavingsGoal.self,
         ])
 
         // Konfigurasi penyimpanan

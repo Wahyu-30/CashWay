@@ -13,6 +13,7 @@ struct ContentView: View {
     enum Tab: String, CaseIterable {
         case dashboard    = "Dashboard"
         case transactions = "Transaksi"
+        case savings      = "Tabungan"
         case budget       = "Budget"
         case reports      = "Laporan"
         case settings     = "Pengaturan"
@@ -21,6 +22,7 @@ struct ContentView: View {
             switch self {
             case .dashboard:    return "house.fill"
             case .transactions: return "list.bullet.rectangle.fill"
+            case .savings:      return "banknote.fill"
             case .budget:       return "target"
             case .reports:      return "chart.bar.fill"
             case .settings:     return "gear"
@@ -31,6 +33,7 @@ struct ContentView: View {
             switch self {
             case .dashboard:    return Color(hex: "#1c6cff") // Signal Blue
             case .transactions: return Color(hex: "#00acfe") // Tag Sky
+            case .savings:      return Color(hex: "#2ecc71") // Green
             case .budget:       return Color(hex: "#ff33aa") // Tag Hot Pink
             case .reports:      return Color(hex: "#ffcc02") // Tag Sunflower
             case .settings:     return Color(hex: "#9019e6") // Tag Violet
@@ -164,6 +167,7 @@ struct ContentView: View {
         switch tab {
         case .dashboard:    DashboardView()
         case .transactions: TransactionListView()
+        case .savings:      SavingsView()
         case .budget:       BudgetView()
         case .reports:      ReportsView()
         case .settings:     SettingsView()
