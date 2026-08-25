@@ -12,8 +12,10 @@ struct BudgetWizardSheet: View {
     
     @State private var use503020 = true
     
-    @Query(filter: #Predicate<Category> { $0.typeRaw == "expense" }) private var allExpenseCategories: [Category]
-    
+    @Query private var allCategories: [Category]
+    private var allExpenseCategories: [Category] {
+        allCategories.filter { $0.type == .expense }
+    }    
     var body: some View {
         NavigationStack {
             ScrollView {
