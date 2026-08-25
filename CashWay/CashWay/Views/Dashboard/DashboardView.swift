@@ -19,12 +19,14 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: CWSpacing.lg) {
-                headerSection
-                balanceCard
-                incomeBreakdownSection
-                chartSection
-                if !vm.smartAdvices.isEmpty { adviceSection }
-                recentTransactionsSection
+                SlideInCard(index: 0) { headerSection }
+                SlideInCard(index: 1) { balanceCard }
+                SlideInCard(index: 2) { incomeBreakdownSection }
+                SlideInCard(index: 3) { chartSection }
+                if !vm.smartAdvices.isEmpty {
+                    SlideInCard(index: 4) { adviceSection }
+                }
+                SlideInCard(index: 5) { recentTransactionsSection }
             }
             .padding(.horizontal, CWSpacing.md)
             .padding(.bottom, CWSpacing.xxl)
@@ -101,10 +103,11 @@ struct DashboardView: View {
                     .font(.caption)
                     .foregroundStyle(Color.cwTextSecondary)
 
-                Text(CurrencyFormatter.format(vm.netBalance))
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundStyle(vm.netBalance >= 0 ? Color.cwIncome : Color.cwExpense)
-                    .monospacedDigit()
+                AnimatedNumberText(
+                    value: vm.netBalance,
+                    color: vm.netBalance >= 0 ? Color.cwIncome : Color.cwExpense,
+                    font: .system(size: 36, weight: .bold, design: .rounded)
+                )
 
                 HStack(spacing: CWSpacing.lg) {
                     statPill(label: "Masuk", amount: vm.totalIncome,   icon: "arrow.down", color: .cwIncome)

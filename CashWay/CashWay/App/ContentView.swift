@@ -178,18 +178,32 @@ struct SidebarItem: View {
     let action: () -> Void
 
     @State private var isHovered = false
+    @State private var iconScale: CGFloat = 1.0
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            // Trigger bounce animation on tap
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
+                iconScale = 0.8
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.5)) {
+                    iconScale = 1.0
+                }
+            }
+            action()
+        }) {
             HStack(spacing: 14) {
-                // Icon container
+                // Icon container with bounce
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(isSelected ? tab.accentColor : (isHovered ? tab.accentColor.opacity(0.15) : Color.cwBackground))
                         .frame(width: 38, height: 38)
+                        .shadow(color: isSelected ? tab.accentColor.opacity(0.4) : .clear, radius: 6, y: 3)
                     Image(systemName: tab.icon)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(isSelected ? .white : (isHovered ? tab.accentColor : Color.cwTextSecondary))
+                        .scaleEffect(iconScale)
                 }
 
                 Text(tab.rawValue)
@@ -198,22 +212,20 @@ struct SidebarItem: View {
 
                 Spacer()
 
-                // Active indicator
+                // Active indicator — pulsing dot
                 if isSelected {
-                    Circle()
-                        .fill(tab.accentColor)
-                        .frame(width: 7, height: 7)
+                    PulsingDot(color: tab.accentColor)
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? tab.accentColor.opacity(0.2) : (isHovered ? Color.cwBackground.opacity(0.6) : Color.clear))
+                    .fill(isSelected ? tab.accentColor.opacity(0.15) : (isHovered ? Color.cwBackground.opacity(0.6) : Color.clear))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? tab.accentColor.opacity(0.4) : Color.clear, lineWidth: 1)
+                    .stroke(isSelected ? tab.accentColor.opacity(0.5) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -222,7 +234,7 @@ struct SidebarItem: View {
                 isHovered = hovering
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+        .animation(.spring(response: 0.35, dampingFraction: 0.65), value: isSelected)
     }
 }
 
