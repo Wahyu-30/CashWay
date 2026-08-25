@@ -29,11 +29,11 @@ struct ContentView: View {
 
         var accentColor: Color {
             switch self {
-            case .dashboard:    return Color(hex: "#00C9A7")
-            case .transactions: return Color(hex: "#F4A261")
-            case .budget:       return Color(hex: "#FF6B6B")
-            case .reports:      return Color(hex: "#845EF7")
-            case .settings:     return Color(hex: "#8B8FA8")
+            case .dashboard:    return Color(hex: "#1c6cff") // Signal Blue
+            case .transactions: return Color(hex: "#00acfe") // Tag Sky
+            case .budget:       return Color(hex: "#ff33aa") // Tag Hot Pink
+            case .reports:      return Color(hex: "#ffcc02") // Tag Sunflower
+            case .settings:     return Color(hex: "#9019e6") // Tag Violet
             }
         }
     }
@@ -70,7 +70,7 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "#00C9A7"), Color(hex: "#845EF7")],
+                                    colors: [Color(hex: "#1c6cff"), Color(hex: "#9019e6")],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -122,7 +122,7 @@ struct ContentView: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "#00C9A7"), Color(hex: "#845EF7")],
+                                    colors: [Color(hex: "#1c6cff"), Color(hex: "#9019e6")],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )

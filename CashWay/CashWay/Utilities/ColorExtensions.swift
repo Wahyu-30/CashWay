@@ -8,24 +8,24 @@ import SwiftUI
 extension Color {
 
     // MARK: - Background Hierarchy (dari paling gelap ke terang)
-    static let cwBackground      = Color(hex: "#0F0F14")  // Background utama
-    static let cwSurface         = Color(hex: "#1A1A2E")  // Card, sheet
-    static let cwSurfaceElevated = Color(hex: "#242438")  // Modal, elevated
+    static let cwBackground      = Color(hex: "#000814")  // Midnight Canvas
+    static let cwSurface         = Color(hex: "#010d1e")  // Deep Surface
+    static let cwSurfaceElevated = Color(hex: "#001533")  // Indigo Surface
 
     // MARK: - Accent & Status
-    static let cwAccent    = Color(hex: "#00C9A7")  // Teal — CTA, active state
-    static let cwIncome    = Color(hex: "#4CAF82")  // Hijau — pemasukan
-    static let cwExpense   = Color(hex: "#FF6B6B")  // Coral — pengeluaran
-    static let cwWarning   = Color(hex: "#F4A261")  // Amber — peringatan / freelance
-    static let cwFreelance = Color(hex: "#F4A261")  // Amber — warna khusus freelance
+    static let cwAccent    = Color(hex: "#1c6cff")  // Signal Blue — CTA, active state
+    static let cwIncome    = Color(hex: "#00cc4b")  // Tag Lime — pemasukan
+    static let cwExpense   = Color(hex: "#ff4433")  // Tag Coral — pengeluaran
+    static let cwWarning   = Color(hex: "#ffcc02")  // Tag Sunflower — peringatan
+    static let cwFreelance = Color(hex: "#ff8833")  // Tag Tangerine — warna khusus freelance
 
     // MARK: - Text
     static let cwTextPrimary   = Color.white
-    static let cwTextSecondary = Color(hex: "#8B8FA8")
-    static let cwPlaceholder   = Color(hex: "#4A4A6A")
+    static let cwTextSecondary = Color(hex: "#748399")  // Muted blue-gray
+    static let cwPlaceholder   = Color(hex: "#34455E")
 
     // MARK: - Border
-    static let cwBorder = Color(hex: "#2A2A3E")
+    static let cwBorder = Color(hex: "#10213E")
 
     // MARK: - Hex Initializer
     // Mengizinkan Color(hex: "#FF6B6B")
