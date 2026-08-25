@@ -72,12 +72,13 @@ struct AddTransactionView: View {
     private var amountInput: some View {
         VStack(spacing: CWSpacing.xs) {
             Text("Jumlah")
-                .font(.caption).foregroundStyle(Color.cwTextSecondary)
+                .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack {
                 Text("Rp").font(.title2).foregroundStyle(Color.cwTextSecondary)
                 TextField("0", text: $vm.amountText)
+                    .textFieldStyle(.plain) // Hilangkan background bawaan macOS
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.cwTextPrimary)
                     #if os(iOS)
@@ -90,8 +91,10 @@ struct AddTransactionView: View {
             .background(Color.cwSurface, in: RoundedRectangle(cornerRadius: CWRadius.md))
             .overlay(
                 RoundedRectangle(cornerRadius: CWRadius.md)
-                    .stroke(Color.cwAccent.opacity(0.5), lineWidth: 1)
+                    .stroke(Color.cwBorder, lineWidth: 1)
             )
+            // Tambahkan glow jika ada isi
+            .shadow(color: vm.amount > 0 ? Color.cwAccent.opacity(0.15) : .clear, radius: 10, y: 5)
         }
     }
 
@@ -99,33 +102,43 @@ struct AddTransactionView: View {
     private var incomeTagPicker: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Sumber Pemasukan")
-                .font(.caption).foregroundStyle(Color.cwTextSecondary)
+                .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
 
-            HStack(spacing: CWSpacing.sm) {
-                ForEach(Transaction.IncomeTag.allCases, id: \.self) { tag in
-                    Button {
-                        vm.selectedIncomeTag = tag
-                    } label: {
-                        HStack(spacing: CWSpacing.xs) {
-                            Image(systemName: tag.icon)
-                            Text(tag.displayName)
-                                .font(.caption)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: CWSpacing.sm) {
+                    ForEach(Transaction.IncomeTag.allCases, id: \.self) { tag in
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                vm.selectedIncomeTag = tag
+                            }
+                        } label: {
+                            HStack(spacing: CWSpacing.xs) {
+                                Image(systemName: tag.icon)
+                                Text(tag.displayName)
+                                    .font(.subheadline.weight(vm.selectedIncomeTag == tag ? .bold : .medium))
+                                    .fixedSize(horizontal: true, vertical: false) // Mencegah teks terpotong ke bawah
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                vm.selectedIncomeTag == tag
+                                    ? Color(hex: tag.colorHex)
+                                    : Color.cwSurfaceElevated,
+                                in: RoundedRectangle(cornerRadius: CWRadius.sm)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: CWRadius.sm)
+                                    .stroke(vm.selectedIncomeTag == tag ? Color(hex: tag.colorHex).opacity(0.5) : Color.cwBorder, lineWidth: 1)
+                            )
+                            .foregroundStyle(
+                                vm.selectedIncomeTag == tag
+                                    ? Color.white
+                                    : Color.cwTextSecondary
+                            )
+                            .shadow(color: vm.selectedIncomeTag == tag ? Color(hex: tag.colorHex).opacity(0.3) : .clear, radius: 4, y: 2)
                         }
-                        .padding(.horizontal, CWSpacing.sm)
-                        .padding(.vertical, CWSpacing.xs)
-                        .background(
-                            vm.selectedIncomeTag == tag
-                                ? Color(hex: tag.colorHex)
-                                : Color.cwSurface,
-                            in: RoundedRectangle(cornerRadius: CWRadius.sm)
-                        )
-                        .foregroundStyle(
-                            vm.selectedIncomeTag == tag
-                                ? Color.white
-                                : Color.cwTextSecondary
-                        )
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -137,10 +150,10 @@ struct AddTransactionView: View {
 
         return VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Kategori")
-                .font(.caption).foregroundStyle(Color.cwTextSecondary)
+                .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
 
             if filtered.isEmpty {
-                Text("Tidak ada kategori").font(.caption).foregroundStyle(Color.cwPlaceholder)
+                Text("Tidak ada kategori").font(.subheadline).foregroundStyle(Color.cwPlaceholder)
             } else {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: CWSpacing.sm) {
                     ForEach(filtered) { cat in
@@ -166,10 +179,11 @@ struct AddTransactionView: View {
                         in: RoundedRectangle(cornerRadius: CWRadius.sm)
                     )
                 Text(category.name)
-                    .font(.system(size: 10))
+                    .font(.caption)
                     .foregroundStyle(isSelected ? Color.cwTextPrimary : Color.cwTextSecondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .buttonStyle(.plain)
@@ -179,7 +193,7 @@ struct AddTransactionView: View {
     private var walletPicker: some View {
         VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Dari / Ke Dompet")
-                .font(.caption).foregroundStyle(Color.cwTextSecondary)
+                .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: CWSpacing.sm) {
