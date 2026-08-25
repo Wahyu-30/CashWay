@@ -253,26 +253,122 @@ struct AddBudgetSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Kategori") {
-                    Picker("Pilih kategori", selection: $selectedCategory) {
-                        Text("Pilih...").tag(Optional<Category>(nil))
-                        ForEach(expenseCategories) { cat in
-                            Label(cat.name, systemImage: cat.icon).tag(Optional(cat))
+            ScrollView {
+                VStack(spacing: CWSpacing.lg) {
+
+                    // MARK: Judul icon
+                    VStack(spacing: CWSpacing.xs) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(LinearGradient(
+                                    colors: [Color.cwAccent, Color(hex: "#9019e6")],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 56, height: 56)
+                            Image(systemName: "target")
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+                        }
+                        Text(editingBudget == nil ? "Set Batas Budget" : "Edit Budget")
+                            .font(.title3.bold())
+                            .foregroundStyle(Color.cwTextPrimary)
+                        Text("Tentukan batas pengeluaran per kategori")
+                            .font(.caption)
+                            .foregroundStyle(Color.cwTextSecondary)
+                    }
+                    .padding(.top, CWSpacing.md)
+
+                    // MARK: Pilih Kategori
+                    VStack(alignment: .leading, spacing: CWSpacing.sm) {
+                        Text("Kategori Pengeluaran")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.cwTextSecondary)
+
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: CWSpacing.sm) {
+                            ForEach(expenseCategories) { cat in
+                                let isSelected = selectedCategory?.id == cat.id
+                                Button {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                        selectedCategory = isSelected ? nil : cat
+                                    }
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        Image(systemName: cat.icon)
+                                            .font(.title3)
+                                            .foregroundStyle(isSelected ? .white : Color(hex: cat.colorHex))
+                                            .frame(width: 44, height: 44)
+                                            .background(
+                                                isSelected ? Color(hex: cat.colorHex) : Color(hex: cat.colorHex).opacity(0.15),
+                                                in: RoundedRectangle(cornerRadius: CWRadius.sm)
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: CWRadius.sm)
+                                                    .stroke(isSelected ? Color(hex: cat.colorHex) : Color.clear, lineWidth: 1.5)
+                                            )
+                                            .shadow(color: isSelected ? Color(hex: cat.colorHex).opacity(0.4) : .clear, radius: 6, y: 2)
+                                        Text(cat.name)
+                                            .font(.caption)
+                                            .foregroundStyle(isSelected ? Color.cwTextPrimary : Color.cwTextSecondary)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.center)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
+                    Divider().background(Color.cwBorder)
+
+                    // MARK: Batas Budget
+                    VStack(alignment: .leading, spacing: CWSpacing.sm) {
+                        Text("Batas Budget")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.cwTextSecondary)
+
+                        HStack {
+                            Text("Rp")
+                                .font(.title2)
+                                .foregroundStyle(Color.cwTextSecondary)
+                            TextField("0", text: $amountText)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundStyle(Color.cwTextPrimary)
+                                #if os(iOS)
+                                .keyboardType(.numberPad)
+                                #endif
+                                .monospacedDigit()
+                                .onChange(of: amountText) {
+                                    let digits = amountText.filter { $0.isNumber }
+                                    amountText = digits
+                                }
+                        }
+                        .padding(CWSpacing.md)
+                        .background(Color.cwSurface, in: RoundedRectangle(cornerRadius: CWRadius.md))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CWRadius.md)
+                                .stroke(amountText.isEmpty ? Color.cwBorder : Color.cwAccent.opacity(0.5), lineWidth: 1)
+                        )
+                        .shadow(color: amountText.isEmpty ? .clear : Color.cwAccent.opacity(0.12), radius: 8, y: 4)
+
+                        if let cat = selectedCategory, !amountText.isEmpty,
+                           let amount = Double(amountText.filter { $0.isNumber }), amount > 0 {
+                            HStack(spacing: 6) {
+                                Image(systemName: cat.icon)
+                                    .font(.caption)
+                                    .foregroundStyle(Color(hex: cat.colorHex))
+                                Text("\(cat.name) dibatasi \(CurrencyFormatter.format(Decimal(amount))) / bulan")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.cwTextSecondary)
+                            }
+                            .padding(.horizontal, CWSpacing.xs)
                         }
                     }
                 }
-                Section("Batas Budget") {
-                    HStack {
-                        Text("Rp").foregroundStyle(Color.cwTextSecondary)
-                        TextField("0", text: $amountText)
-                            #if os(iOS)
-                            .keyboardType(.numberPad)
-                            #endif
-                    }
-                }
+                .padding(.horizontal, CWSpacing.md)
+                .padding(.bottom, CWSpacing.xxl)
             }
-            .scrollContentBackground(.hidden)
             .background(Color.cwBackground)
             .navigationTitle(editingBudget == nil ? "Tambah Budget" : "Edit Budget")
             #if os(iOS)
@@ -290,6 +386,7 @@ struct AddBudgetSheet: View {
                 }
             }
         }
+        .presentationDetents([.large])
         .preferredColorScheme(.dark)
         .onAppear { loadEditingData() }
     }
