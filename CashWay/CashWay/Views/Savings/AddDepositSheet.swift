@@ -118,8 +118,8 @@ struct AddDepositSheet: View {
         let cat = cats.first(where: { $0.name == "Investasi" || $0.name == "Lainnya" })
         
         let tx = Transaction(
-            type: .expense,
             amount: amount,
+            type: .expense,
             date: .now,
             note: "Setor Tabungan: \(goal.name)",
             wallet: defaultWallet,
