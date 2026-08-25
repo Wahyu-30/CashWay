@@ -95,7 +95,9 @@ final class DashboardViewModel {
     // MARK: - Smart Advisory
     var smartAdvices: [SmartAdvice] {
         SmartAdviceEngine(
-            monthlySalary: monthlySalary,
+            // Gunakan salaryIncome aktual dari transaksi. Jika belum ada, gunakan totalIncome.
+            // Tidak lagi bergantung pada hardcode 4,5jt di UserDefaults.
+            monthlySalary: salaryIncome > 0 ? salaryIncome : (totalIncome > 0 ? totalIncome : 1),
             month: selectedMonth,
             year:  selectedYear
         ).generateAdvice(transactions: allTransactions, budgets: allBudgets)

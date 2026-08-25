@@ -20,7 +20,7 @@ struct SettingsView: View {
     var body: some View {
         List {
             profileSection
-            financeSection
+            // financeSection // Removed because salary is not always fixed at 4.5m
             syncSection
             aboutSection
             dangerSection
