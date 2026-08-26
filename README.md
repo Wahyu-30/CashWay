@@ -137,13 +137,14 @@ Saat ini CashWay telah menyelesaikan implementasi fitur inti beserta cloud sync 
 - Autentikasi Pengguna: **Google Sign-In** untuk macOS dan iOS via Firebase Auth
 - App Sandbox & Keychain Sharing di macOS
 - Smooth UI Animations (`SlideInCard`) di semua halaman utama
+- **App Icon macOS & iOS:** Full generator icon multi-resolusi.
+- **Perbaikan Bug Internal:** Penyempurnaan urutan inisialisasi Firebase & StateObject untuk mencegah *memory leak* dan log error.
 
 ⏳ **Akan Datang (Belum Selesai):**
 1. **Push Notifications (Reminders):** Fitur pengingat mencatat pemasukan (tanggal 1 awal bulan) dan pengingat mencatat pengeluaran harian (malam hari).
 2. **Data Privacy (Firestore Security Rules):** Mengubah rules database agar user hanya bisa melihat & mengedit datanya sendiri berdasarkan `userId`.
 3. **Data Scoping:** Memasukkan `userId` ke dalam model data (Transaction, Budget, SavingsGoal) agar sinkronisasi benar-benar terpisah per pengguna.
-4. **App Icon:** Menetapkan dan mengubah icon final aplikasi di Xcode.
-5. **Export PDF:** Untuk pelaporan.
+4. **Export PDF:** Untuk pelaporan.
 
 ---
 

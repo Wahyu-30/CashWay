@@ -20,14 +20,28 @@ class AuthManager: ObservableObject {
     @Published var isAuthenticating: Bool = false
     @Published var errorMessage: String?
     
+    // Simpan handle agar listener aktif selama AuthManager hidup
+    private var authListenerHandle: AuthStateDidChangeListenerHandle?
+    
     init() {
+        // Firebase sudah di-configure oleh CashWayApp.init() sebelum kita dibuat
+        startListening()
+    }
+    
+    func startListening() {
         self.user = Auth.auth().currentUser
         
         // Listener otomatis jika status login berubah (misal token expired, dsb)
-        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+        authListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 self?.user = user
             }
+        }
+    }
+    
+    deinit {
+        if let handle = authListenerHandle {
+            Auth.auth().removeStateDidChangeListener(handle)
         }
     }
     

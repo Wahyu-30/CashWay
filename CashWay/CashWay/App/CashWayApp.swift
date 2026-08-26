@@ -11,7 +11,6 @@ import GoogleSignIn
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        FirebaseApp.configure()
         return true
     }
 }
@@ -20,7 +19,6 @@ import AppKit
 import Carbon.HIToolbox
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        FirebaseApp.configure()
         // Daftarkan handler URL untuk menangkap callback dari browser setelah Google Sign-In
         NSAppleEventManager.shared().setEventHandler(
             self,
@@ -52,9 +50,22 @@ struct CashWayApp: App {
     #elseif os(macOS)
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     #endif
+    
+    // Flag statis agar configure() hanya dipanggil sekali tanpa memanggil FirebaseApp.app()
+    // (memanggil FirebaseApp.app() sebelum configure() justru MEMICU warning log Firebase)
+    private static var firebaseConfigured = false
+    
+    init() {
+        if !CashWayApp.firebaseConfigured {
+            CashWayApp.firebaseConfigured = true
+            FirebaseApp.configure()
+        }
+        _dataStore = StateObject(wrappedValue: DataStore())
+        _authManager = StateObject(wrappedValue: AuthManager())
+    }
 
-    @StateObject private var dataStore = DataStore()
-    @StateObject private var authManager = AuthManager()
+    @StateObject private var dataStore: DataStore
+    @StateObject private var authManager: AuthManager
 
     var body: some Scene {
         WindowGroup {
@@ -72,7 +83,10 @@ struct CashWayApp: App {
                 GIDSignIn.sharedInstance.handle(url)
             }
             .onAppear {
-                // Seed initial data if empty (after a short delay to allow Firestore listener to populate)
+                // Start Firestore listeners AFTER app appears
+                dataStore.startListening()
+                
+                // Seed initial data if empty
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     if dataStore.categories.isEmpty {
                         dataStore.seedCategories(DefaultData.expenseCategories.enumerated().map {

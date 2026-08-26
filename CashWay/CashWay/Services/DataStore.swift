@@ -11,9 +11,13 @@ class DataStore: ObservableObject {
     @Published var budgets: [Budget] = []
     @Published var savingsGoals: [SavingsGoal] = []
     
-    private let db = FirebaseManager.shared.db
+    private var db: Firestore { FirebaseManager.shared.db }
     
     init() {
+        // Init empty
+    }
+    
+    func startListening() {
         // Fetch all data
         fetchCategories()
         fetchWallets()

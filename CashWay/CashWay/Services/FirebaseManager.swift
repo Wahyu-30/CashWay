@@ -4,12 +4,12 @@ import FirebaseFirestore
 
 class FirebaseManager {
     static let shared = FirebaseManager()
-    let db: Firestore
+    
+    var db: Firestore {
+        return Firestore.firestore()
+    }
     
     private init() {
-        if FirebaseApp.app() == nil {
-            FirebaseApp.configure()
-        }
-        self.db = Firestore.firestore()
+        // Do nothing here! App delegate handles FirebaseApp.configure()
     }
 }
