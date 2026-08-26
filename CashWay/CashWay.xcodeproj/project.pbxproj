@@ -6,13 +6,34 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DED5F488303EB569004FE573 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = DED5F487303EB569004FE573 /* GoogleSignIn */; };
+		DED5F48A303EB569004FE573 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DED5F489303EB569004FE573 /* GoogleSignInSwift */; };
+		DED5F491303EB6F7004FE573 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DED5F490303EB6F7004FE573 /* FirebaseAuth */; };
+		DEE068E6303E0C1100845199 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = DEE068E5303E0C1100845199 /* FirebaseAnalytics */; };
+		DEE068E8303E0C1100845199 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DEE068E7303E0C1100845199 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		DE334545303AD42500A8C84E /* CashWay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CashWay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DED5F485303EB3C7004FE573 /* Exceptions for "CashWay" folder in "CashWay" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DE334544303AD42500A8C84E /* CashWay */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DE334547303AD42500A8C84E /* CashWay */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DED5F485303EB3C7004FE573 /* Exceptions for "CashWay" folder in "CashWay" target */,
+			);
 			path = CashWay;
 			sourceTree = "<group>";
 		};
@@ -23,6 +44,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEE068E6303E0C1100845199 /* FirebaseAnalytics in Frameworks */,
+				DED5F491303EB6F7004FE573 /* FirebaseAuth in Frameworks */,
+				DEE068E8303E0C1100845199 /* FirebaseFirestore in Frameworks */,
+				DED5F488303EB569004FE573 /* GoogleSignIn in Frameworks */,
+				DED5F48A303EB569004FE573 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				DE334547303AD42500A8C84E /* CashWay */,
+				DED5F48F303EB6F7004FE573 /* Frameworks */,
 				DE334546303AD42500A8C84E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +70,13 @@
 				DE334545303AD42500A8C84E /* CashWay.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DED5F48F303EB6F7004FE573 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +99,11 @@
 			);
 			name = CashWay;
 			packageProductDependencies = (
+				DEE068E5303E0C1100845199 /* FirebaseAnalytics */,
+				DEE068E7303E0C1100845199 /* FirebaseFirestore */,
+				DED5F487303EB569004FE573 /* GoogleSignIn */,
+				DED5F489303EB569004FE573 /* GoogleSignInSwift */,
+				DED5F490303EB6F7004FE573 /* FirebaseAuth */,
 			);
 			productName = CashWay;
 			productReference = DE334545303AD42500A8C84E /* CashWay.app */;
@@ -94,6 +133,10 @@
 			);
 			mainGroup = DE33453C303AD42500A8C84E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DEE068E4303E0C1000845199 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				DED5F486303EB569004FE573 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DE334546303AD42500A8C84E /* Products */;
 			projectDirPath = "";
@@ -246,14 +289,26 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CashWay/CashWay.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = QRXAJUV4Z6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CashWay/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -290,14 +345,26 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CashWay/CashWay.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = QRXAJUV4Z6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CashWay/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -351,6 +418,53 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DED5F486303EB569004FE573 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.2.0;
+			};
+		};
+		DEE068E4303E0C1000845199 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.18.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DED5F487303EB569004FE573 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DED5F486303EB569004FE573 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		DED5F489303EB569004FE573 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DED5F486303EB569004FE573 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		DED5F490303EB6F7004FE573 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DEE068E4303E0C1000845199 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		DEE068E5303E0C1100845199 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DEE068E4303E0C1000845199 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		DEE068E7303E0C1100845199 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DEE068E4303E0C1000845199 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DE33453D303AD42500A8C84E /* Project object */;
 }

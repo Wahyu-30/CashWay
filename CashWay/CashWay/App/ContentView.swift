@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // ============================================================
 // MARK: - ContentView
@@ -8,6 +7,7 @@ import SwiftData
 
 struct ContentView: View {
 
+    @EnvironmentObject private var dataStore: DataStore
     @State private var selectedTab: Tab = .dashboard
 
     enum Tab: String, CaseIterable {
@@ -244,9 +244,6 @@ struct SidebarItem: View {
 
 #Preview {
     ContentView()
-        .modelContainer(
-            for: [Transaction.self, Category.self, Wallet.self, Budget.self],
-            inMemory: true
-        )
+        .environmentObject(DataStore())
         .preferredColorScheme(.dark)
 }

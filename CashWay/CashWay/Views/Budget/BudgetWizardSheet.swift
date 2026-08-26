@@ -1,8 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct BudgetWizardSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
     @Environment(\.dismiss)      private var dismiss
     
     let month: Int
@@ -11,10 +10,8 @@ struct BudgetWizardSheet: View {
     let expenseData: [(category: Category, avgAmount: Decimal)]
     
     @State private var use503020 = true
-    
-    @Query private var allCategories: [Category]
     private var allExpenseCategories: [Category] {
-        allCategories.filter { $0.type == .expense }
+        dataStore.categories.filter { $0.type == .expense }
     }    
     var body: some View {
         NavigationStack {
@@ -188,7 +185,6 @@ struct BudgetWizardSheet: View {
             let limitPerCat = wantsLimit / Decimal(wCats.count)
             for cat in wCats { insertOrUpdate(category: cat, amount: limitPerCat) }
         }
-        try? modelContext.save()
     }
     
     private func generateHistoricalBudgets() {
@@ -197,17 +193,16 @@ struct BudgetWizardSheet: View {
             let proposed = data.avgAmount * 1.10
             insertOrUpdate(category: data.category, amount: proposed)
         }
-        try? modelContext.save()
     }
     
     private func insertOrUpdate(category: Category, amount: Decimal) {
-        let descriptor = FetchDescriptor<Budget>()
-        let existing = (try? modelContext.fetch(descriptor)) ?? []
-        if let budget = existing.first(where: { $0.month == month && $0.year == year && $0.category?.id == category.id }) {
+        let existing = dataStore.budgets
+        if var budget = existing.first(where: { $0.month == month && $0.year == year && $0.category?.id == category.id }) {
             budget.amount = amount
+            dataStore.addBudget(budget)
         } else {
             let budget = Budget(amount: amount, month: month, year: year, category: category)
-            modelContext.insert(budget)
+            dataStore.addBudget(budget)
         }
     }
 }

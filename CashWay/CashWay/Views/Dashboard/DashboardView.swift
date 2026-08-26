@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import Charts
 
 // ============================================================
@@ -9,10 +8,7 @@ import Charts
 
 struct DashboardView: View {
 
-    @Environment(\.modelContext) private var modelContext
-
-    @Query private var transactions: [Transaction]
-    @Query private var budgets:      [Budget]
+    @EnvironmentObject private var dataStore: DataStore
 
     @State private var vm = DashboardViewModel()
 
@@ -44,9 +40,14 @@ struct DashboardView: View {
         .sheet(isPresented: $vm.showSmartAdvice) {
             SmartAdviceView(advices: vm.smartAdvices)
         }
-        .onAppear { vm.update(transactions: transactions, budgets: budgets) }
-        .onChange(of: transactions) { vm.update(transactions: transactions, budgets: budgets) }
-        .onChange(of: budgets)      { vm.update(transactions: transactions, budgets: budgets) }
+        .onChange(of: dataStore.transactions) { _, _ in updateData() }
+        .onChange(of: dataStore.budgets) { _, _ in updateData() }
+        .onChange(of: vm.selectedMonth) { _, _ in updateData() }
+        .onAppear { updateData() }
+    }
+
+    private func updateData() {
+        vm.update(transactions: dataStore.transactions, budgets: dataStore.budgets)
     }
 
     // MARK: - Header
@@ -444,6 +445,6 @@ struct DashboardView: View {
     NavigationStack {
         DashboardView()
     }
-    .modelContainer(for: [Transaction.self, Category.self, Wallet.self, Budget.self], inMemory: true)
+    .environmentObject(DataStore())
     .preferredColorScheme(.dark)
 }

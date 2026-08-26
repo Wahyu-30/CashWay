@@ -1,9 +1,8 @@
 import SwiftUI
-import SwiftData
 
 struct SavingsView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \SavingsGoal.targetDate, order: .forward) private var goals: [SavingsGoal]
+    @EnvironmentObject private var dataStore: DataStore
+    private var goals: [SavingsGoal] { dataStore.savingsGoals.sorted { ($0.targetDate ?? .distantFuture) < ($1.targetDate ?? .distantFuture) } }
     
     @State private var showAddGoal = false
     
@@ -12,28 +11,30 @@ struct SavingsView: View {
             VStack(spacing: CWSpacing.lg) {
                 
                 // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Tabungan & Target")
-                            .font(.title2.bold())
-                            .foregroundStyle(Color.cwTextPrimary)
-                        Text("Mulai sisihkan uang untuk mimpimu")
-                            .font(.caption)
-                            .foregroundStyle(Color.cwTextSecondary)
+                SlideInCard(index: 0) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Tabungan & Target")
+                                .font(.title2.bold())
+                                .foregroundStyle(Color.cwTextPrimary)
+                            Text("Mulai sisihkan uang untuk mimpimu")
+                                .font(.caption)
+                                .foregroundStyle(Color.cwTextSecondary)
+                        }
+                        Spacer()
+                        Button {
+                            showAddGoal = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(Color.cwTextPrimary)
+                                .frame(width: 40, height: 40)
+                                .background(Color.cwSurfaceElevated, in: Circle())
+                        }
+                        .buttonStyle(.plain)
                     }
-                    Spacer()
-                    Button {
-                        showAddGoal = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(Color.cwTextPrimary)
-                            .frame(width: 40, height: 40)
-                            .background(Color.cwSurfaceElevated, in: Circle())
-                    }
-                    .buttonStyle(.plain)
+                    .padding(.top, CWSpacing.md)
                 }
-                .padding(.top, CWSpacing.md)
                 
                 // Summary Card
                 let totalSaved = goals.reduce(Decimal(0)) { $0 + $1.currentAmount }
@@ -41,53 +42,59 @@ struct SavingsView: View {
                 let globalProgress = totalTarget > 0 ? NSDecimalNumber(decimal: totalSaved / totalTarget).doubleValue : 0
                 
                 if !goals.isEmpty {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: CWRadius.xl)
-                            .fill(LinearGradient(
-                                colors: [Color(hex: "#102330"), Color.cwSurface],
-                                startPoint: .topLeading, endPoint: .bottomTrailing
-                            ))
-                            .overlay(RoundedRectangle(cornerRadius: CWRadius.xl).stroke(Color.cwBorder, lineWidth: 1))
-                        
-                        VStack(spacing: CWSpacing.md) {
-                            Text("Total Terkumpul")
-                                .font(.caption)
-                                .foregroundStyle(Color.cwTextSecondary)
-                            AnimatedNumberText(value: totalSaved, color: .cwIncome, font: .system(size: 32, weight: .bold, design: .rounded))
+                    SlideInCard(index: 1) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: CWRadius.xl)
+                                .fill(LinearGradient(
+                                    colors: [Color(hex: "#102330"), Color.cwSurface],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing
+                                ))
+                                .overlay(RoundedRectangle(cornerRadius: CWRadius.xl).stroke(Color.cwBorder, lineWidth: 1))
                             
-                            VStack(spacing: 4) {
-                                GeometryReader { geo in
-                                    ZStack(alignment: .leading) {
-                                        RoundedRectangle(cornerRadius: 4).fill(Color.cwSurfaceElevated).frame(height: 8)
-                                        RoundedRectangle(cornerRadius: 4).fill(Color.cwIncome)
-                                            .frame(width: geo.size.width * CGFloat(globalProgress), height: 8)
+                            VStack(spacing: CWSpacing.md) {
+                                Text("Total Terkumpul")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.cwTextSecondary)
+                                AnimatedNumberText(value: totalSaved, color: .cwIncome, font: .system(size: 32, weight: .bold, design: .rounded))
+                                
+                                VStack(spacing: 4) {
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            RoundedRectangle(cornerRadius: 4).fill(Color.cwSurfaceElevated).frame(height: 8)
+                                            RoundedRectangle(cornerRadius: 4).fill(Color.cwIncome)
+                                                .frame(width: geo.size.width * CGFloat(globalProgress), height: 8)
+                                        }
+                                    }
+                                    .frame(height: 8)
+                                    HStack {
+                                        Text("\(Int(globalProgress * 100))% dari target \(CurrencyFormatter.formatCompact(totalTarget))")
+                                            .font(.caption2)
+                                            .foregroundStyle(Color.cwTextSecondary)
+                                        Spacer()
                                     }
                                 }
-                                .frame(height: 8)
-                                HStack {
-                                    Text("\(Int(globalProgress * 100))% dari target \(CurrencyFormatter.formatCompact(totalTarget))")
-                                        .font(.caption2)
-                                        .foregroundStyle(Color.cwTextSecondary)
-                                    Spacer()
-                                }
                             }
+                            .padding(CWSpacing.lg)
                         }
-                        .padding(CWSpacing.lg)
                     }
                 }
                 
                 // List of Goals
                 if goals.isEmpty {
-                    ContentUnavailableView(
-                        "Belum ada target tabungan",
-                        systemImage: "banknote",
-                        description: Text("Ketuk + untuk membuat target tabungan pertamamu, seperti beli kamera atau liburan.")
-                    )
-                    .frame(height: 300)
+                    SlideInCard(index: 1) {
+                        ContentUnavailableView(
+                            "Belum ada target tabungan",
+                            systemImage: "banknote",
+                            description: Text("Ketuk + untuk membuat target tabungan pertamamu, seperti beli kamera atau liburan.")
+                        )
+                        .frame(height: 300)
+                    }
                 } else {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: CWSpacing.md) {
-                        ForEach(goals) { goal in
-                            SavingsGoalCard(goal: goal)
+                        ForEach(Array(goals.enumerated()), id: \.element.id) { index, goal in
+                            SlideInCard(index: index + 2) {
+                                SavingsGoalCard(goal: goal)
+                            }
                         }
                     }
                 }
@@ -108,7 +115,7 @@ struct SavingsView: View {
 
 // MARK: - SavingsGoalCard
 struct SavingsGoalCard: View {
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
     let goal: SavingsGoal
     
     @State private var showDeposit = false
@@ -198,8 +205,8 @@ struct SavingsGoalCard: View {
         .alert("Hapus Tabungan?", isPresented: $showDeleteAlert) {
             Button("Batal", role: .cancel) {}
             Button("Hapus", role: .destructive) {
-                modelContext.delete(goal)
-                try? modelContext.save()
+                dataStore.deleteSavingsGoal(goal)
+                
             }
         } message: {
             Text("Target tabungan ini akan dihapus permanen. Uang yang disetor tidak akan terhapus dari log transaksi.")

@@ -1,8 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct AddDepositSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
     @Environment(\.dismiss)      private var dismiss
     
     let goal: SavingsGoal
@@ -104,17 +103,15 @@ struct AddDepositSheet: View {
         let amount = CurrencyFormatter.parse(amountText)
         
         // Tambahkan saldo ke goal
-        goal.currentAmount += amount
+        var updatedGoal = goal
+        updatedGoal.currentAmount += amount
+        dataStore.updateSavingsGoal(updatedGoal)
         
         // Otomatis catat sebagai transaksi pengeluaran (menabung)
-        // Cari wallet default
-        let descriptor = FetchDescriptor<Wallet>()
-        let wallets = (try? modelContext.fetch(descriptor)) ?? []
+        let wallets = dataStore.wallets
         let defaultWallet = wallets.first(where: { $0.isDefault }) ?? wallets.first
         
-        // Cari kategori tabungan / lainnya
-        let catDesc = FetchDescriptor<Category>()
-        let cats = (try? modelContext.fetch(catDesc)) ?? []
+        let cats = dataStore.categories
         let cat = cats.first(where: { $0.name == "Investasi" || $0.name == "Lainnya" })
         
         let tx = Transaction(
@@ -126,8 +123,7 @@ struct AddDepositSheet: View {
             wallet: defaultWallet
         )
         
-        modelContext.insert(tx)
-        try? modelContext.save()
+        dataStore.addTransaction(tx)
         dismiss()
     }
 }

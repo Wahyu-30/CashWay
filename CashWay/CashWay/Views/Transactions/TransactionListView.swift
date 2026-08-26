@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // ============================================================
 // MARK: - TransactionListView
@@ -8,14 +7,13 @@ import SwiftData
 
 struct TransactionListView: View {
 
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    @EnvironmentObject private var dataStore: DataStore
 
     @State private var vm = TransactionViewModel()
 
     var body: some View {
         Group {
-            if transactions.isEmpty {
+            if dataStore.transactions.isEmpty {
                 emptyState
             } else {
                 listContent
@@ -40,39 +38,45 @@ struct TransactionListView: View {
                 .listRowBackground(Color.cwBackground)
                 .listRowSeparator(.hidden)
 
-            let groups = vm.grouped(transactions)
+            let groups = vm.grouped(dataStore.transactions)
             if groups.isEmpty {
-                ContentUnavailableView.search
-                    .listRowBackground(Color.cwBackground)
+                SlideInCard(index: 1) {
+                    ContentUnavailableView.search
+                }
+                .listRowBackground(Color.cwBackground)
             } else {
-                ForEach(groups, id: \.date) { group in
+                ForEach(Array(groups.enumerated()), id: \.element.date) { gIndex, group in
                     Section {
-                        ForEach(group.items) { transaction in
-                            TransactionRowView(transaction: transaction)
-                                .listRowBackground(Color.cwSurface)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        vm.delete(transaction, context: modelContext)
-                                    } label: {
-                                        Label("Hapus", systemImage: "trash")
-                                    }
+                        ForEach(Array(group.items.enumerated()), id: \.element.id) { rIndex, transaction in
+                            SlideInCard(index: gIndex + rIndex) {
+                                TransactionRowView(transaction: transaction)
+                            }
+                            .listRowBackground(Color.cwSurface)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    vm.delete(transaction, dataStore: dataStore)
+                                } label: {
+                                    Label("Hapus", systemImage: "trash")
                                 }
-                                .swipeActions(edge: .leading) {
-                                    Button {
-                                        vm.editingTransaction = transaction
-                                    } label: {
-                                        Label("Edit", systemImage: "pencil")
-                                    }
-                                    .tint(Color.cwAccent)
+                            }
+                            .swipeActions(edge: .leading) {
+                                Button {
+                                    vm.editingTransaction = transaction
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
                                 }
+                                .tint(Color.cwAccent)
+                            }
                         }
                     } header: {
-                        Text(group.date.formatted(.dateTime
-                            .day().month(.wide).year()
-                            .locale(Locale(identifier: "id_ID"))))
-                            .font(.footnote.bold())
-                            .foregroundStyle(Color.cwTextSecondary)
-                            .textCase(nil)
+                        SlideInCard(index: gIndex) {
+                            Text(group.date.formatted(.dateTime
+                                .day().month(.wide).year()
+                                .locale(Locale(identifier: "id_ID"))))
+                                .font(.footnote.bold())
+                                .foregroundStyle(Color.cwTextSecondary)
+                                .textCase(nil)
+                        }
                     }
                 }
             }
@@ -214,6 +218,6 @@ struct TransactionRowView: View {
 
 #Preview {
     NavigationStack { TransactionListView() }
-        .modelContainer(for: [Transaction.self, Category.self, Wallet.self, Budget.self], inMemory: true)
+        .environmentObject(DataStore())
         .preferredColorScheme(.dark)
 }

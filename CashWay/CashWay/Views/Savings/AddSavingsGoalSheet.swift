@@ -1,8 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct AddSavingsGoalSheet: View {
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
     @Environment(\.dismiss)      private var dismiss
     
     @State private var name: String = ""
@@ -162,8 +161,8 @@ struct AddSavingsGoalSheet: View {
             icon: selectedIcon,
             colorHex: selectedColor
         )
-        modelContext.insert(goal)
-        try? modelContext.save()
+        dataStore.addSavingsGoal(goal)
+        
         dismiss()
     }
 }

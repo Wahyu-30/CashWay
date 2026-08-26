@@ -1,41 +1,37 @@
 import Foundation
-import SwiftData
 
-@Model
-final class SavingsGoal {
-    var id: UUID = UUID()
-    var name: String = ""
-    var targetAmount: Decimal = 0
-    var currentAmount: Decimal = 0
-    var targetDate: Date? = nil
-    var icon: String = "target"
-    var colorHex: String = "#1c6cff"
-    
-    // Status apakah goal sudah tercapai
-    var isAchieved: Bool {
-        currentAmount >= targetAmount && targetAmount > 0
-    }
-    
-    // Persentase progress (0.0 - 1.0)
-    var progress: Double {
-        guard targetAmount > 0 else { return 0 }
-        let ratio = currentAmount / targetAmount
-        return min(NSDecimalNumber(decimal: ratio).doubleValue, 1.0)
-    }
+struct SavingsGoal: Identifiable, Codable, Equatable, Hashable {
+    var id: String
+    var name: String
+    var targetAmount: Decimal
+    var currentAmount: Decimal
+    var targetDate: Date?
+    var icon: String
+    var colorHex: String
+    var createdAt: Date
 
     init(
+        id: String = UUID().uuidString,
         name: String,
         targetAmount: Decimal,
         currentAmount: Decimal = 0,
         targetDate: Date? = nil,
         icon: String = "target",
-        colorHex: String = "#1c6cff"
+        colorHex: String = "#1c6cff",
+        createdAt: Date = .now
     ) {
+        self.id = id
         self.name = name
         self.targetAmount = targetAmount
         self.currentAmount = currentAmount
         self.targetDate = targetDate
         self.icon = icon
         self.colorHex = colorHex
+        self.createdAt = createdAt
+    }
+    
+    var progress: Double {
+        if targetAmount == 0 { return 0 }
+        return min(NSDecimalNumber(decimal: currentAmount / targetAmount).doubleValue, 1.0)
     }
 }

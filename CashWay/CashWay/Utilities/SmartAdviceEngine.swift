@@ -71,7 +71,7 @@ struct SmartAdviceEngine {
     }
 
     private func freelanceSum(_ txs: [Transaction]) -> Decimal {
-        txs.filter { $0.type == .income && $0.incomeTag == .freelance }
+        txs.filter { $0.type == .income && $0.incomeTag == .business }
            .reduce(Decimal(0)) { $0 + $1.amount }
     }
 

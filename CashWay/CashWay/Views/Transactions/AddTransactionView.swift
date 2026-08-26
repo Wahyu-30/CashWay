@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // ============================================================
 // MARK: - AddTransactionView
@@ -10,11 +9,8 @@ import SwiftData
 
 struct AddTransactionView: View {
 
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
     @Environment(\.dismiss)      private var dismiss
-
-    @Query(sort: \Category.sortOrder) private var categories: [Category]
-    @Query(sort: \Wallet.sortOrder)   private var wallets:    [Wallet]
 
     @State private var vm = TransactionViewModel()
 
@@ -107,46 +103,48 @@ struct AddTransactionView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: CWSpacing.sm) {
                     ForEach(Transaction.IncomeTag.allCases, id: \.self) { tag in
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                vm.selectedIncomeTag = tag
-                            }
-                        } label: {
-                            HStack(spacing: CWSpacing.xs) {
-                                Image(systemName: tag.icon)
-                                Text(tag.displayName)
-                                    .font(.subheadline.weight(vm.selectedIncomeTag == tag ? .bold : .medium))
-                                    .fixedSize(horizontal: true, vertical: false) // Mencegah teks terpotong ke bawah
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                vm.selectedIncomeTag == tag
-                                    ? Color(hex: tag.colorHex)
-                                    : Color.cwSurfaceElevated,
-                                in: RoundedRectangle(cornerRadius: CWRadius.sm)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: CWRadius.sm)
-                                    .stroke(vm.selectedIncomeTag == tag ? Color(hex: tag.colorHex).opacity(0.5) : Color.cwBorder, lineWidth: 1)
-                            )
-                            .foregroundStyle(
-                                vm.selectedIncomeTag == tag
-                                    ? Color.white
-                                    : Color.cwTextSecondary
-                            )
-                            .shadow(color: vm.selectedIncomeTag == tag ? Color(hex: tag.colorHex).opacity(0.3) : .clear, radius: 4, y: 2)
-                        }
-                        .buttonStyle(.plain)
+                        incomeTagChip(tag)
                     }
                 }
             }
         }
     }
 
+    private func incomeTagChip(_ tag: Transaction.IncomeTag) -> some View {
+        let isSelected = vm.selectedIncomeTag == tag
+        return Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                vm.selectedIncomeTag = tag
+            }
+        } label: {
+            HStack(spacing: CWSpacing.xs) {
+                Image(systemName: tag.icon)
+                Text(tag.displayName)
+                    .font(isSelected ? .subheadline.weight(.bold) : .subheadline.weight(.medium))
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                isSelected ? Color(hex: tag.colorHex) : Color.cwSurfaceElevated,
+                in: RoundedRectangle(cornerRadius: CWRadius.sm)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: CWRadius.sm)
+                    .stroke(
+                        isSelected ? Color(hex: tag.colorHex).opacity(0.5) : Color.cwBorder,
+                        lineWidth: 1
+                    )
+            )
+            .foregroundStyle(isSelected ? Color.white : Color.cwTextSecondary)
+            .shadow(color: isSelected ? Color(hex: tag.colorHex).opacity(0.3) : .clear, radius: 4, y: 2)
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Category Picker
     private var categoryPicker: some View {
-        let filtered = categories.filter { $0.type == (vm.selectedType == .income ? .income : .expense) }
+        let filtered = dataStore.categories.filter { $0.type == (vm.selectedType == .income ? .income : .expense) }
 
         return VStack(alignment: .leading, spacing: CWSpacing.sm) {
             Text("Kategori")
@@ -197,7 +195,7 @@ struct AddTransactionView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: CWSpacing.sm) {
-                    ForEach(wallets) { wallet in
+                    ForEach(dataStore.wallets) { wallet in
                         walletChip(wallet)
                     }
                 }
@@ -257,7 +255,7 @@ struct AddTransactionView: View {
 
     // MARK: - Actions
     private func saveAndDismiss() {
-        vm.save(context: modelContext)
+        vm.save(dataStore: dataStore)
         dismiss()
     }
 
@@ -266,13 +264,13 @@ struct AddTransactionView: View {
             vm.loadForEdit(t)
         } else {
             // Set default wallet (yang isDefault = true)
-            vm.selectedWallet = wallets.first(where: { $0.isDefault }) ?? wallets.first
+            vm.selectedWallet = dataStore.wallets.first(where: { $0.isDefault }) ?? dataStore.wallets.first
         }
     }
 }
 
 #Preview {
     AddTransactionView()
-        .modelContainer(for: [Transaction.self, Category.self, Wallet.self, Budget.self], inMemory: true)
+        .environmentObject(DataStore())
         .preferredColorScheme(.dark)
 }

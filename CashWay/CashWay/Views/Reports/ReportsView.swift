@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import Charts
 
 // ============================================================
@@ -9,14 +8,14 @@ import Charts
 
 struct ReportsView: View {
 
-    @Query private var transactions: [Transaction]
+    @EnvironmentObject private var dataStore: DataStore
 
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: .now)
     @State private var selectedYear:  Int = Calendar.current.component(.year,  from: .now)
 
     private var monthTx: [Transaction] {
         let cal = Calendar.current
-        return transactions.filter {
+        return dataStore.transactions.filter {
             cal.component(.month, from: $0.date) == selectedMonth &&
             cal.component(.year,  from: $0.date) == selectedYear
         }
@@ -64,10 +63,10 @@ struct ReportsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: CWSpacing.lg) {
-                monthNavigator
-                summaryCards
-                categoryChart
-                categoryTable
+                SlideInCard(index: 0) { monthNavigator }
+                SlideInCard(index: 1) { summaryCards }
+                SlideInCard(index: 2) { categoryChart }
+                SlideInCard(index: 3) { categoryTable }
             }
             .padding(CWSpacing.md)
         }
@@ -239,6 +238,6 @@ struct ReportsView: View {
 
 #Preview {
     NavigationStack { ReportsView() }
-        .modelContainer(for: [Transaction.self, Category.self, Wallet.self, Budget.self], inMemory: true)
+        .environmentObject(DataStore())
         .preferredColorScheme(.dark)
 }

@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 import Observation
 
 // ============================================================
@@ -66,10 +65,10 @@ final class TransactionViewModel {
     // MARK: - CRUD Operations
 
     /// Simpan transaksi baru atau update yang sudah ada
-    func save(context: ModelContext) {
+    func save(dataStore: DataStore) {
         guard isValidForm else { return }
 
-        if let existing = editingTransaction {
+        if var existing = editingTransaction {
             // Update
             existing.amount   = amount
             existing.type     = selectedType
@@ -78,6 +77,7 @@ final class TransactionViewModel {
             existing.date     = selectedDate
             existing.note     = note
             existing.incomeTag = selectedType == .income ? selectedIncomeTag : nil
+            dataStore.addTransaction(existing)
         } else {
             // Insert baru
             let transaction = Transaction(
@@ -89,17 +89,15 @@ final class TransactionViewModel {
                 wallet:    selectedWallet,
                 incomeTag: selectedType == .income ? selectedIncomeTag : nil
             )
-            context.insert(transaction)
+            dataStore.addTransaction(transaction)
         }
 
-        try? context.save()
         resetForm()
     }
 
     /// Hapus transaksi
-    func delete(_ transaction: Transaction, context: ModelContext) {
-        context.delete(transaction)
-        try? context.save()
+    func delete(_ transaction: Transaction, dataStore: DataStore) {
+        dataStore.deleteTransaction(transaction)
     }
 
     // MARK: - Form Helpers

@@ -54,8 +54,8 @@ struct SlideInCard<Content: View>: View {
             .offset(y: appeared ? 0 : 40)
             .onAppear {
                 withAnimation(
-                    .spring(response: 0.5, dampingFraction: 0.75)
-                    .delay(Double(index) * 0.07)
+                    .spring(response: 0.75, dampingFraction: 0.8)
+                    .delay(Double(index) * 0.12)
                 ) {
                     appeared = true
                 }

@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // ============================================================
 // MARK: - SettingsView
@@ -15,15 +14,15 @@ struct SettingsView: View {
 
     @State private var salaryText: String = ""
     @State private var showDeleteAlert = false
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
 
     var body: some View {
         List {
-            profileSection
-            // financeSection // Removed because salary is not always fixed at 4.5m
-            syncSection
-            aboutSection
-            dangerSection
+            SlideInCard(index: 0) { profileSection }
+            // SlideInCard(index: 1) { financeSection } // Removed
+            SlideInCard(index: 1) { syncSection }
+            SlideInCard(index: 2) { aboutSection }
+            SlideInCard(index: 3) { dangerSection }
         }
         #if os(iOS)
         .listStyle(.insetGrouped)
@@ -149,15 +148,8 @@ struct SettingsView: View {
     }
 
     private func deleteAllData() {
-        let allTransactions = (try? modelContext.fetch(FetchDescriptor<Transaction>())) ?? []
-        allTransactions.forEach { modelContext.delete($0) }
-        let allBudgets = (try? modelContext.fetch(FetchDescriptor<Budget>())) ?? []
-        allBudgets.forEach { modelContext.delete($0) }
-        let allWallets = (try? modelContext.fetch(FetchDescriptor<Wallet>())) ?? []
-        allWallets.forEach { modelContext.delete($0) }
-        let allCategories = (try? modelContext.fetch(FetchDescriptor<Category>())) ?? []
-        allCategories.forEach { modelContext.delete($0) }
-        try? modelContext.save()
-        DefaultData.seedIfNeeded(context: modelContext)
+        for tx in dataStore.transactions { dataStore.deleteTransaction(tx) }
+        for b in dataStore.budgets { dataStore.deleteBudget(b) }
+        for s in dataStore.savingsGoals { dataStore.deleteSavingsGoal(s) }
     }
 }

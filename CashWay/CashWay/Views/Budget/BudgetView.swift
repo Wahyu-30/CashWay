@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // ============================================================
 // MARK: - BudgetView
@@ -9,10 +8,7 @@ import SwiftData
 
 struct BudgetView: View {
 
-    @Environment(\.modelContext) private var modelContext
-
-    @Query(sort: \Budget.month) private var budgets:     [Budget]
-    @Query                      private var categories:  [Category]
+    @EnvironmentObject private var dataStore: DataStore
 
     @State private var selectedMonth: Int  = Calendar.current.component(.month, from: .now)
     @State private var selectedYear:  Int  = Calendar.current.component(.year,  from: .now)
@@ -20,11 +16,8 @@ struct BudgetView: View {
     @State private var showWizard: Bool = false
     @State private var editingBudget: Budget? = nil
 
-    // Untuk fitur Auto Wizard
-    @Query private var transactions: [Transaction]
-
     private var monthBudgets: [Budget] {
-        budgets.filter { $0.month == selectedMonth && $0.year == selectedYear }
+        dataStore.budgets.filter { $0.month == selectedMonth && $0.year == selectedYear }
     }
 
     private var totalBudget: Decimal   { monthBudgets.reduce(0) { $0 + $1.amount } }
@@ -78,7 +71,7 @@ struct BudgetView: View {
     // MARK: - Helper for Wizard
     private func calculateIncome() -> Decimal {
         let cal = Calendar.current
-        let currentTx = transactions.filter {
+        let currentTx = dataStore.transactions.filter {
             let m = cal.component(.month, from: $0.date)
             let y = cal.component(.year, from: $0.date)
             return m == selectedMonth && y == selectedYear && $0.type == .income
@@ -93,11 +86,11 @@ struct BudgetView: View {
         guard let currentDate = cal.date(from: DateComponents(year: selectedYear, month: selectedMonth)),
               let pastDate = cal.date(byAdding: .month, value: -3, to: currentDate) else { return [] }
         
-        let pastTx = transactions.filter {
+        let pastTx = dataStore.transactions.filter {
             $0.type == .expense && $0.date >= pastDate && $0.date < currentDate && $0.category != nil
         }
         
-        var dict: [UUID: (cat: Category, sum: Decimal)] = [:]
+        var dict: [String: (cat: Category, sum: Decimal)] = [:]
         for tx in pastTx {
             if let cat = tx.category {
                 let current = dict[cat.id]?.sum ?? 0
@@ -177,16 +170,17 @@ struct BudgetView: View {
     // MARK: - Budget List
     private var budgetList: some View {
         VStack(spacing: CWSpacing.sm) {
-            ForEach(monthBudgets) { budget in
-                BudgetRowView(budget: budget)
-                    .onTapGesture { editingBudget = budget }
-                    .contextMenu {
-                        Button("Edit") { editingBudget = budget }
-                        Button("Hapus", role: .destructive) {
-                            modelContext.delete(budget)
-                            try? modelContext.save()
+            ForEach(Array(monthBudgets.enumerated()), id: \.element.id) { index, budget in
+                SlideInCard(index: index) {
+                    BudgetRowView(budget: budget)
+                        .onTapGesture { editingBudget = budget }
+                        .contextMenu {
+                            Button("Edit") { editingBudget = budget }
+                            Button("Hapus", role: .destructive) {
+                                dataStore.deleteBudget(budget)
+                            }
                         }
-                    }
+                }
             }
         }
     }
@@ -298,12 +292,11 @@ struct BudgetRowView: View {
 
 struct AddBudgetSheet: View {
 
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var dataStore: DataStore
     @Environment(\.dismiss)      private var dismiss
 
-    @Query private var allCategories: [Category]
     private var expenseCategories: [Category] {
-        allCategories.filter { $0.type == .expense }
+        dataStore.categories.filter { $0.type == .expense }
     }
 
     var editingBudget: Budget? = nil
@@ -459,9 +452,10 @@ struct AddBudgetSheet: View {
 
     private func save() {
         let amount = CurrencyFormatter.parse(amountText)
-        if let existing = editingBudget {
+        if var existing = editingBudget {
             existing.amount   = amount
             existing.category = selectedCategory
+            dataStore.addBudget(existing)
         } else {
             let budget = Budget(
                 amount:   amount,
@@ -469,9 +463,8 @@ struct AddBudgetSheet: View {
                 year:     year,
                 category: selectedCategory
             )
-            modelContext.insert(budget)
+            dataStore.addBudget(budget)
         }
-        try? modelContext.save()
         dismiss()
     }
 
@@ -485,6 +478,6 @@ struct AddBudgetSheet: View {
 
 #Preview {
     NavigationStack { BudgetView() }
-        .modelContainer(for: [Transaction.self, Category.self, Wallet.self, Budget.self], inMemory: true)
+        .environmentObject(DataStore())
         .preferredColorScheme(.dark)
 }

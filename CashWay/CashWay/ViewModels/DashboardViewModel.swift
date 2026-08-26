@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 import Observation
 
 // ============================================================
@@ -53,7 +52,7 @@ final class DashboardViewModel {
 
     var freelanceIncome: Decimal {
         monthTransactions
-            .filter { $0.type == .income && $0.incomeTag == .freelance }
+            .filter { $0.type == .income && $0.incomeTag == .business }
             .reduce(0) { $0 + $1.amount }
     }
 
