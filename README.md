@@ -118,23 +118,24 @@ CashWay/
 
 ## 📈 Status Pengerjaan (Progress)
 
-Saat ini CashWay telah menyelesaikan **Fase 1 (Core MVP)** dan sudah bisa digunakan dengan lancar di Mac dan iPhone.
+Saat ini CashWay telah menyelesaikan implementasi fitur inti beserta cloud sync menggunakan **Firebase** dan autentikasi dengan **Google Sign-In**.
 
 ✅ **Selesai:**
-- Setup Xcode Project (SwiftUI + SwiftData)
-- Schema database (Transaction, Budget, Category, Wallet)
-- Tampilan Dashboard dengan grafik pengeluaran
-- Fitur input & hapus transaksi
-- Fitur limit Budget per kategori
-- *Smart Advice Engine* (Memberi peringatan/saran berdasarkan gaji pokok vs pengeluaran)
-- Optimasi UI/UX khusus macOS (Sidebar, Teks responsif)
-- Sinkronisasi dengan GitHub repo
+- Setup Xcode Project (SwiftUI)
+- UI/UX Premium Dark Mode
+- Fitur input & hapus transaksi, Budget, Tabungan, & Laporan
+- *Smart Advice Engine* (Peringatan cerdas pengeluaran & Auto-Budgeting)
+- Migrasi Data Layer: Dari `SwiftData` (offline) menjadi **Firebase Firestore** (Realtime Cloud Sync)
+- Autentikasi Pengguna: **Google Sign-In** untuk macOS dan iOS via Firebase Auth
+- App Sandbox & Keychain Sharing di macOS
+- Smooth UI Animations (`SlideInCard`) di semua halaman utama
 
-⏳ **Akan Datang (Fase 2 & 3):**
-- Filter riwayat transaksi secara mendalam
-- Export laporan keuangan bulanan (PDF/CSV)
-- Sinkronisasi iCloud otomatis antar device (Mac ↔ iPhone)
-- Fitur Multi-wallet (Bank, Tunai, e-Wallet)
+⏳ **Akan Datang (Belum Selesai):**
+1. **Push Notifications (Reminders):** Fitur pengingat mencatat pemasukan (tanggal 1 awal bulan) dan pengingat mencatat pengeluaran harian (malam hari).
+2. **Data Privacy (Firestore Security Rules):** Mengubah rules database agar user hanya bisa melihat & mengedit datanya sendiri berdasarkan `userId`.
+3. **Data Scoping:** Memasukkan `userId` ke dalam model data (Transaction, Budget, SavingsGoal) agar sinkronisasi benar-benar terpisah per pengguna.
+4. **App Icon:** Menetapkan dan mengubah icon final aplikasi di Xcode.
+5. **Export PDF:** Untuk pelaporan.
 
 ---
 

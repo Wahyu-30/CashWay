@@ -202,15 +202,18 @@ v2.0 → Import CSV Rekening Koran + Advanced Analytics
 
 ## 📊 Progress Tracker
 
-| Phase | Status | Minggu |
-|-------|--------|--------|
-| Phase 1: Foundation | ⬜ Belum mulai | Minggu 1 |
-| Phase 2: CRUD Transaksi | ⬜ Belum mulai | Minggu 2-3 |
-| Phase 3: Dashboard | ⬜ Belum mulai | Minggu 4 |
-| Phase 4: Wallet & Budget | ⬜ Belum mulai | Minggu 5 |
-| Phase 5: Kategori & Settings | ⬜ Belum mulai | Minggu 6 |
-| Phase 6: Laporan & Export | ⬜ Belum mulai | Minggu 7 |
-| Phase 7: Polish & Deploy | ⬜ Belum mulai | Minggu 8 |
+| Phase | Status | Update Terakhir |
+|-------|--------|-----------------|
+| Phase 1: Foundation (UI/UX) | ✅ Selesai | UI Dark Mode (Copilot Style) |
+| Phase 2: CRUD Transaksi | ✅ Selesai | Menyimpan & filter transaksi |
+| Phase 3: Dashboard & AI Advice | ✅ Selesai | Auto-budget & Smart Advice |
+| Phase 4: Tabungan & Budget | ✅ Selesai | Progress tabungan & limit budget |
+| Phase 5: Migrasi Firebase | ✅ Selesai | Data realtime via Firestore (Cloud Sync) |
+| Phase 6: Autentikasi Google | ✅ Selesai | Google Sign-In macOS & iOS via Firebase Auth |
+| Phase 7: UI Polish | ✅ Selesai | Animasi SlideInCard, Keychain, App Sandbox |
+| Phase 8: Laporan & Export | ⏳ Berjalan | PDF Export, Laporan lengkap |
+| Phase 9: Push Notifications | ⬜ Belum mulai | Reminder awal bulan & malam hari |
+| Phase 10: Firestore Security Rules | ⬜ Belum mulai | Kunci database berdasar `userId` |
 
 ---
 
