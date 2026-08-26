@@ -54,7 +54,15 @@ git clone https://github.com/Wahyu-30/CashWay.git
 # Atau download ZIP dan extract ke folder yang diinginkan
 ```
 
-### 2. Buka di Xcode
+### 2. Setup Firebase (Penting)
+Karena aplikasi ini menggunakan Firebase untuk autentikasi dan database, file konfigurasi Firebase dirahasiakan dan tidak di-push ke GitHub. Kamu perlu menambahkannya secara manual:
+1. Buat project baru di [Firebase Console](https://console.firebase.google.com/).
+2. Tambahkan aplikasi iOS/macOS dengan Bundle ID `com.namakamu.cashway`.
+3. Aktifkan **Authentication** (Google Sign-In) & **Firestore Database**.
+4. Download file `GoogleService-Info.plist`.
+5. Masukkan file tersebut ke dalam folder `CashWay/CashWay/App/` di Xcode project kamu.
+
+### 3. Buka di Xcode
 ```bash
 open CashWay.xcodeproj
 ```
