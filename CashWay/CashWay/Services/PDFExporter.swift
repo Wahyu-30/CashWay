@@ -67,13 +67,16 @@ struct PDFExporter {
 
         pdfCtx.beginPDFPage(nil)
 
-        // Gunakan NSGraphicsContext dengan flipped:true agar NSImage
-        // digambar dari kiri-atas — mencegah output terbalik di PDF.
-        let nsGC = NSGraphicsContext(cgContext: pdfCtx, flipped: true)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = nsGC
-        nsImage.draw(in: NSRect(origin: .zero, size: pageSize))
-        NSGraphicsContext.restoreGraphicsState()
+        // Perbaikan: Sistem koordinat PDF di macOS dimulai dari kiri-bawah (Y-up), 
+        // sedangkan NSImage digambar dari kiri-atas jika dikonversi biasa.
+        // Cukup translate Y sebesar tinggi, dan scale Y dengan -1.
+        if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            pdfCtx.saveGState()
+            pdfCtx.translateBy(x: 0, y: pageSize.height)
+            pdfCtx.scaleBy(x: 1.0, y: -1.0)
+            pdfCtx.draw(cgImage, in: CGRect(origin: .zero, size: pageSize))
+            pdfCtx.restoreGState()
+        }
 
         pdfCtx.endPDFPage()
         pdfCtx.closePDF()
