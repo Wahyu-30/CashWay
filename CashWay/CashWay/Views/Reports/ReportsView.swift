@@ -179,116 +179,118 @@ struct ReportsView: View {
         guard !isComputing else { return }
         isComputing = true
 
-        let cal       = Calendar.current
-        let month     = selectedMonth
-        let year      = selectedYear
-        let allTx     = dataStore.transactions
-        let budgets   = dataStore.budgets
-        let wallets   = dataStore.wallets
+        let cal     = Calendar.current
+        let month   = selectedMonth
+        let year    = selectedYear
+        let allTx   = dataStore.transactions
+        let budgets = dataStore.budgets
+        let wallets = dataStore.wallets
 
-        Task.detached(priority: .userInitiated) {
-            // Precompute month/year sekali untuk setiap transaksi (hindari O(n×12))
-            let tagged = allTx.map { tx -> (tx: Transaction, m: Int, y: Int) in
-                (tx: tx,
-                 m: cal.component(.month, from: tx.date),
-                 y: cal.component(.year,  from: tx.date))
-            }
+        // Precompute month/year SEKALI per transaksi — O(n), bukan O(n×12)
+        let tagged = allTx.map { tx in
+            (tx: tx,
+             m: cal.component(.month, from: tx.date),
+             y: cal.component(.year,  from: tx.date))
+        }
 
-            let monthTx   = tagged.filter { $0.m == month && $0.y == year }
-            let expenseTx = monthTx.filter { $0.tx.type == .expense }
-            let incomeTx  = monthTx.filter { $0.tx.type == .income  }
+        let monthTx   = tagged.filter { $0.m == month && $0.y == year }
+        let expenseTx = monthTx.filter { $0.tx.type == .expense }
+        let incomeTx  = monthTx.filter { $0.tx.type == .income  }
 
-            let totalExpense  = expenseTx.reduce(Decimal(0)) { $0 + $1.tx.amount }
-            let totalIncome   = incomeTx.reduce(Decimal(0))  { $0 + $1.tx.amount }
-            let netSaving     = totalIncome - totalExpense
+        let totalExpense  = expenseTx.reduce(Decimal(0)) { $0 + $1.tx.amount }
+        let totalIncome   = incomeTx.reduce(Decimal(0))  { $0 + $1.tx.amount }
+        let netSaving     = totalIncome - totalExpense
 
-            let initialTotal  = wallets.reduce(Decimal(0)) { $0 + $1.initialBalance }
-            let allIncome     = allTx.filter { $0.type == .income  }.reduce(Decimal(0)) { $0 + $1.amount }
-            let allExpense    = allTx.filter { $0.type == .expense }.reduce(Decimal(0)) { $0 + $1.amount }
-            let walletBalance = initialTotal + allIncome - allExpense
+        let initialTotal  = wallets.reduce(Decimal(0)) { $0 + $1.initialBalance }
+        let allIncome     = allTx.filter { $0.type == .income  }.reduce(Decimal(0)) { $0 + $1.amount }
+        let allExpense    = allTx.filter { $0.type == .expense }.reduce(Decimal(0)) { $0 + $1.amount }
+        let walletBalance = initialTotal + allIncome - allExpense
 
-            // --- Budget Rows ---
-            let monthBudgets = budgets.filter { $0.month == month && $0.year == year }
-            var spendingMap: [String: (name: String, colorHex: String, amount: Decimal)] = [:]
-            for item in expenseTx {
-                let catId = item.tx.category?.id ?? "other"
-                let name  = item.tx.category?.name     ?? "Lainnya"
-                let color = item.tx.category?.colorHex ?? "#8B8FA8"
-                if let ex = spendingMap[catId] {
-                    spendingMap[catId] = (name: name, colorHex: color, amount: ex.amount + item.tx.amount)
-                } else {
-                    spendingMap[catId] = (name: name, colorHex: color, amount: item.tx.amount)
-                }
-            }
-            var handled: Set<String> = []
-            var budgetRows: [BudgetTableRow] = []
-            for b in monthBudgets {
-                let catId = b.category?.id ?? ""
-                handled.insert(catId)
-                budgetRows.append(BudgetTableRow(
-                    id: catId.isEmpty ? UUID().uuidString : catId,
-                    categoryName: b.category?.name     ?? "Lainnya",
-                    colorHex:     b.category?.colorHex ?? "#8B8FA8",
-                    budgeted: b.amount,
-                    spent:    spendingMap[catId]?.amount ?? 0))
-            }
-            for (catId, info) in spendingMap where !handled.contains(catId) {
-                budgetRows.append(BudgetTableRow(id: catId, categoryName: info.name, colorHex: info.colorHex, budgeted: nil, spent: info.amount))
-            }
-            budgetRows.sort {
-                let aH = $0.budgeted != nil; let bH = $1.budgeted != nil
-                if aH != bH { return aH }
-                return $0.spent > $1.spent
-            }
-
-            // --- Income by Category ---
-            var incomeDict: [String: (name: String, amount: Decimal, colorHex: String)] = [:]
-            for item in incomeTx {
-                let name  = item.tx.category?.name     ?? "Lainnya"
-                let color = item.tx.category?.colorHex ?? "#4CAF82"
-                if let ex = incomeDict[name] {
-                    incomeDict[name] = (name: name, amount: ex.amount + item.tx.amount, colorHex: color)
-                } else {
-                    incomeDict[name] = (name: name, amount: item.tx.amount, colorHex: color)
-                }
-            }
-            let incomeRows = incomeDict.values.sorted { $0.amount > $1.amount }
-                .map { (name: $0.name, amount: $0.amount, colorHex: $0.colorHex) }
-
-            let expenseChart = budgetRows.filter { $0.spent > 0 }
-                .map { (name: $0.categoryName, amount: NSDecimalNumber(decimal: $0.spent).doubleValue, colorHex: $0.colorHex) }
-
-            // --- Monthly Trend — O(n) karena pakai dictionary ---
-            var monthlyExpense: [String: Double] = [:]
-            for item in tagged where item.tx.type == .expense {
-                let key = "\(item.y)-\(item.m)"
-                monthlyExpense[key, default: 0] += NSDecimalNumber(decimal: item.tx.amount).doubleValue
-            }
-            let fmt = DateFormatter()
-            fmt.locale = Locale(identifier: "id_ID")
-            fmt.dateFormat = "MMM"
-            var trend: [(month: String, amount: Double)] = []
-            for i in stride(from: 11, through: 0, by: -1) {
-                let comps = DateComponents(year: year, month: month - i)
-                let date  = cal.date(from: comps) ?? Date()
-                let m2 = cal.component(.month, from: date)
-                let y2 = cal.component(.year,  from: date)
-                trend.append((month: fmt.string(from: date), amount: monthlyExpense["\(y2)-\(m2)"] ?? 0))
-            }
-
-            // Balik ke main thread untuk update UI
-            await MainActor.run {
-                self.cachedBudgetRows    = budgetRows
-                self.cachedIncomeRows    = incomeRows
-                self.cachedExpenseChart  = expenseChart
-                self.cachedMonthlyTrend  = trend
-                self.cachedTotalIncome   = totalIncome
-                self.cachedTotalExpense  = totalExpense
-                self.cachedNetSaving     = netSaving
-                self.cachedWalletBalance = walletBalance
-                self.isComputing         = false
+        // --- Budget Rows ---
+        let monthBudgets = budgets.filter { $0.month == month && $0.year == year }
+        var spendingMap: [String: (name: String, colorHex: String, amount: Decimal)] = [:]
+        for item in expenseTx {
+            let catId = item.tx.category?.id       ?? "other"
+            let name  = item.tx.category?.name     ?? "Lainnya"
+            let color = item.tx.category?.colorHex ?? "#8B8FA8"
+            if let ex = spendingMap[catId] {
+                spendingMap[catId] = (name: name, colorHex: color, amount: ex.amount + item.tx.amount)
+            } else {
+                spendingMap[catId] = (name: name, colorHex: color, amount: item.tx.amount)
             }
         }
+        var handled: Set<String> = []
+        var newBudgetRows: [BudgetTableRow] = []
+        for b in monthBudgets {
+            let catId = b.category?.id ?? ""
+            handled.insert(catId)
+            newBudgetRows.append(BudgetTableRow(
+                id:           catId.isEmpty ? UUID().uuidString : catId,
+                categoryName: b.category?.name     ?? "Lainnya",
+                colorHex:     b.category?.colorHex ?? "#8B8FA8",
+                budgeted:     b.amount,
+                spent:        spendingMap[catId]?.amount ?? 0))
+        }
+        for (catId, info) in spendingMap where !handled.contains(catId) {
+            newBudgetRows.append(BudgetTableRow(
+                id: catId, categoryName: info.name,
+                colorHex: info.colorHex, budgeted: nil, spent: info.amount))
+        }
+        newBudgetRows.sort {
+            let aH = $0.budgeted != nil; let bH = $1.budgeted != nil
+            if aH != bH { return aH }
+            return $0.spent > $1.spent
+        }
+
+        // --- Income by Category ---
+        var incomeDict: [String: (name: String, amount: Decimal, colorHex: String)] = [:]
+        for item in incomeTx {
+            let name  = item.tx.category?.name     ?? "Lainnya"
+            let color = item.tx.category?.colorHex ?? "#4CAF82"
+            if let ex = incomeDict[name] {
+                incomeDict[name] = (name: name, amount: ex.amount + item.tx.amount, colorHex: color)
+            } else {
+                incomeDict[name] = (name: name, amount: item.tx.amount, colorHex: color)
+            }
+        }
+        let newIncomeRows = incomeDict.values
+            .sorted { $0.amount > $1.amount }
+            .map { (name: $0.name, amount: $0.amount, colorHex: $0.colorHex) }
+
+        let newExpenseChart = newBudgetRows.filter { $0.spent > 0 }
+            .map { (name: $0.categoryName,
+                    amount: NSDecimalNumber(decimal: $0.spent).doubleValue,
+                    colorHex: $0.colorHex) }
+
+        // --- Monthly Trend — O(n) dengan dictionary ---
+        var monthlyExpense: [String: Double] = [:]
+        for item in tagged where item.tx.type == .expense {
+            let key = "\(item.y)-\(item.m)"
+            monthlyExpense[key, default: 0] += NSDecimalNumber(decimal: item.tx.amount).doubleValue
+        }
+        let fmt = DateFormatter()
+        fmt.locale     = Locale(identifier: "id_ID")
+        fmt.dateFormat = "MMM"
+        var newTrend: [(month: String, amount: Double)] = []
+        for i in stride(from: 11, through: 0, by: -1) {
+            let comps = DateComponents(year: year, month: month - i)
+            let date  = cal.date(from: comps) ?? Date()
+            let m2    = cal.component(.month, from: date)
+            let y2    = cal.component(.year,  from: date)
+            newTrend.append((month: fmt.string(from: date),
+                             amount: monthlyExpense["\(y2)-\(m2)"] ?? 0))
+        }
+
+        // Update state (sudah di MainActor karena ini SwiftUI view)
+        cachedBudgetRows    = newBudgetRows
+        cachedIncomeRows    = newIncomeRows
+        cachedExpenseChart  = newExpenseChart
+        cachedMonthlyTrend  = newTrend
+        cachedTotalIncome   = totalIncome
+        cachedTotalExpense  = totalExpense
+        cachedNetSaving     = netSaving
+        cachedWalletBalance = walletBalance
+        isComputing         = false
     }
 
     // MARK: - Budget Table
