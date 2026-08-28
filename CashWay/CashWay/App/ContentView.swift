@@ -8,6 +8,7 @@ import SwiftUI
 struct ContentView: View {
 
     @EnvironmentObject private var dataStore: DataStore
+    @EnvironmentObject private var authManager: AuthManager
     @State private var selectedTab: Tab = .dashboard
 
     enum Tab: String, CaseIterable {
@@ -132,17 +133,19 @@ struct ContentView: View {
                             )
                             .frame(width: 28, height: 28)
                             .overlay(
-                                Text("W")
+                                Text(String(authManager.userNickname.prefix(1)).uppercased())
                                     .font(.system(size: 13, weight: .black, design: .rounded))
                                     .foregroundStyle(.white)
                             )
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("Way")
+                            Text(authManager.userNickname)
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(Color.cwTextPrimary)
-                            Text("Personal Account")
+                                .lineLimit(1)
+                            Text(authManager.user?.email ?? "Personal Account")
                                 .font(.system(size: 10))
                                 .foregroundStyle(Color.cwTextSecondary)
+                                .lineLimit(1)
                         }
                         Spacer()
                     }
