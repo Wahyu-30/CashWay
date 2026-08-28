@@ -34,36 +34,6 @@
             endingLineNumber = "166"
             landmarkName = "summaryCard(label:amount:color:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "746AD32A-77D7-435F-9113-903F037385ED - c90c442dd291e76"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "CashWay.ReportsView.monthlyTrend.getter : Swift.Array&lt;(month: Swift.String, amount: Swift.Double)&gt;"
-                  moduleName = "CashWay.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/wahyuahmadcahyadi/Desktop/PROJECT%20CODE%202026/CASHWAY/CashWay/CashWay/Views/Reports/ReportsView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "166"
-                  endingLineNumber = "166">
-               </Location>
-               <Location
-                  uuid = "746AD32A-77D7-435F-9113-903F037385ED - 355f435ad9f3b9da"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; SwiftUI.TupleView&lt;(SwiftUI.Text, &lt;&lt;opaque return type of SwiftUI.View.lineLimit(Swift.Optional&lt;Swift.Int&gt;) -&gt; some&gt;&gt;.0)&gt; in CashWay.ReportsView.summaryCard(label: Swift.String, amount: __C.NSDecimal, color: SwiftUI.Color) -&gt; some"
-                  moduleName = "CashWay.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/wahyuahmadcahyadi/Desktop/PROJECT%20CODE%202026/CASHWAY/CashWay/CashWay/Views/Reports/ReportsView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "166"
-                  endingLineNumber = "166">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -52,17 +52,16 @@ struct ReportsView: View {
     @State private var pdfURL: URL?
     @State private var showShareSheet  = false
     @State private var isGeneratingPDF = false
-    @State private var isComputing     = false
 
     // MARK: - Cached Data (diisi oleh recompute())
-    @State private var cachedBudgetRows:      [BudgetTableRow] = []
-    @State private var cachedIncomeRows:      [(name: String, amount: Decimal, colorHex: String)] = []
-    @State private var cachedExpenseChart:    [(name: String, amount: Double, colorHex: String)] = []
-    @State private var cachedMonthlyTrend:    [(month: String, amount: Double)] = []
-    @State private var cachedTotalIncome:     Decimal = 0
-    @State private var cachedTotalExpense:    Decimal = 0
-    @State private var cachedNetSaving:       Decimal = 0
-    @State private var cachedWalletBalance:   Decimal = 0
+    @State private var cachedBudgetRows:    [BudgetTableRow] = []
+    @State private var cachedIncomeRows:    [(name: String, amount: Decimal, colorHex: String)] = []
+    @State private var cachedExpenseChart:  [(name: String, amount: Double, colorHex: String)] = []
+    @State private var cachedMonthlyTrend:  [(month: String, amount: Double)] = []
+    @State private var cachedTotalIncome:   Decimal = 0
+    @State private var cachedTotalExpense:  Decimal = 0
+    @State private var cachedNetSaving:     Decimal = 0
+    @State private var cachedWalletBalance: Decimal = 0
 
     // MARK: - Body
 
@@ -71,15 +70,9 @@ struct ReportsView: View {
             VStack(spacing: CWSpacing.lg) {
                 SlideInCard(index: 0) { monthNavigator }
                 SlideInCard(index: 1) { summaryCards }
-                if isComputing {
-                    ProgressView("Menghitung data...")
-                        .frame(maxWidth: .infinity)
-                        .padding(CWSpacing.xl)
-                } else {
-                    SlideInCard(index: 2) { budgetTableSection }
-                    SlideInCard(index: 3) { incomeTableSection }
-                    SlideInCard(index: 4) { chartsSection }
-                }
+                SlideInCard(index: 2) { budgetTableSection }
+                SlideInCard(index: 3) { incomeTableSection }
+                SlideInCard(index: 4) { chartsSection }
             }
             .padding(CWSpacing.md)
         }
@@ -93,10 +86,10 @@ struct ReportsView: View {
             if let url = pdfURL { ShareSheet(url: url) }
         }
         .onAppear { recompute() }
-        .onChange(of: selectedMonth)             { recompute() }
-        .onChange(of: selectedYear)              { recompute() }
+        .onChange(of: selectedMonth)                { recompute() }
+        .onChange(of: selectedYear)                 { recompute() }
         .onChange(of: dataStore.transactions.count) { recompute() }
-        .onChange(of: dataStore.budgets.count)   { recompute() }
+        .onChange(of: dataStore.budgets.count)      { recompute() }
     }
 
     // MARK: - Toolbar
@@ -176,9 +169,6 @@ struct ReportsView: View {
 
     // MARK: - Recompute (background)
     private func recompute() {
-        guard !isComputing else { return }
-        isComputing = true
-
         let cal     = Calendar.current
         let month   = selectedMonth
         let year    = selectedYear
@@ -290,7 +280,6 @@ struct ReportsView: View {
         cachedTotalExpense  = totalExpense
         cachedNetSaving     = netSaving
         cachedWalletBalance = walletBalance
-        isComputing         = false
     }
 
     // MARK: - Budget Table
