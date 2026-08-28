@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var salaryText: String = ""
     @State private var showDeleteAlert = false
     @EnvironmentObject private var dataStore: DataStore
+    @EnvironmentObject private var authManager: AuthManager
 
     var body: some View {
         List {
@@ -137,6 +138,15 @@ struct SettingsView: View {
 
     private var dangerSection: some View {
         Section("Zona Bahaya") {
+            Button {
+                dataStore.clearData()
+                authManager.signOut()
+            } label: {
+                HStack {
+                    Image(systemName: "rectangle.portrait.and.arrow.right").foregroundStyle(Color.cwAccent)
+                    Text("Keluar (Sign Out)").foregroundStyle(Color.cwTextPrimary)
+                }
+            }
             Button { showDeleteAlert = true } label: {
                 HStack {
                     Image(systemName: "trash.fill").foregroundStyle(Color.cwExpense)

@@ -7,6 +7,7 @@ enum CategoryType: String, Codable {
 
 struct Category: Identifiable, Codable, Equatable, Hashable {
     var id: String
+    var userId: String       // Stempel pemilik: UID Google pengguna
     var name: String
     var icon: String
     var colorHex: String
@@ -16,6 +17,7 @@ struct Category: Identifiable, Codable, Equatable, Hashable {
 
     init(
         id: String = UUID().uuidString,
+        userId: String = "",
         name: String,
         icon: String,
         colorHex: String,
@@ -24,6 +26,7 @@ struct Category: Identifiable, Codable, Equatable, Hashable {
         sortOrder: Int = 99
     ) {
         self.id = id
+        self.userId = userId
         self.name = name
         self.icon = icon
         self.colorHex = colorHex

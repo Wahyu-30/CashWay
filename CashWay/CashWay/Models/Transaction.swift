@@ -55,6 +55,7 @@ struct Transaction: Identifiable, Codable, Equatable, Hashable {
     }
 
     var id: String
+    var userId: String       // Stempel pemilik: UID Google pengguna
     var amount: Decimal
     var type: TransactionType
     var date: Date
@@ -68,6 +69,7 @@ struct Transaction: Identifiable, Codable, Equatable, Hashable {
 
     init(
         id: String = UUID().uuidString,
+        userId: String = "",
         amount: Decimal,
         type: TransactionType,
         date: Date,
@@ -78,6 +80,7 @@ struct Transaction: Identifiable, Codable, Equatable, Hashable {
         createdAt: Date = .now
     ) {
         self.id = id
+        self.userId = userId
         self.amount = amount
         self.type = type
         self.date = date

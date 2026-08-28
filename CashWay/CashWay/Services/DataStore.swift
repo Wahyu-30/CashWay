@@ -2,6 +2,13 @@ import Combine
 
 import SwiftUI
 import FirebaseFirestore
+import FirebaseAuth
+
+// ============================================================
+// MARK: - DataStore
+// Mengelola semua data dengan isolasi per pengguna (userId).
+// Setiap query difilter berdasarkan UID Google pengguna aktif.
+// ============================================================
 
 @MainActor
 class DataStore: ObservableObject {
@@ -13,12 +20,20 @@ class DataStore: ObservableObject {
     
     private var db: Firestore { FirebaseManager.shared.db }
     
+    // Ambil UID pengguna yang sedang login. Jika tidak ada, return nil.
+    private var currentUserId: String? {
+        Auth.auth().currentUser?.uid
+    }
+    
     init() {
-        // Init empty
+        // Init empty — data dimuat via startListening()
     }
     
     func startListening() {
-        // Fetch all data
+        guard currentUserId != nil else {
+            print("DataStore: Tidak ada pengguna yang login, skip fetching.")
+            return
+        }
         fetchCategories()
         fetchWallets()
         fetchTransactions()
@@ -26,18 +41,31 @@ class DataStore: ObservableObject {
         fetchSavingsGoals()
     }
     
-    // MARK: - Generic Fetcher
+    // Hapus semua data dari layar saat pengguna logout
+    func clearData() {
+        transactions = []
+        categories = []
+        wallets = []
+        budgets = []
+        savingsGoals = []
+    }
+    
+    // MARK: - Generic Fetcher (dengan filter userId)
     private func fetchCollection<T: Codable>(collection: String, sortField: String, completion: @escaping ([T]) -> Void) {
-        db.collection(collection).order(by: sortField, descending: false).addSnapshotListener { snapshot, error in
-            guard let documents = snapshot?.documents else {
-                print("Error fetching \(collection): \(error?.localizedDescription ?? "Unknown")")
-                return
+        guard let uid = currentUserId else { return }
+        db.collection(collection)
+            .whereField("userId", isEqualTo: uid)
+            .order(by: sortField, descending: false)
+            .addSnapshotListener { snapshot, error in
+                guard let documents = snapshot?.documents else {
+                    print("Error fetching \(collection): \(error?.localizedDescription ?? "Unknown")")
+                    return
+                }
+                let items: [T] = documents.compactMap { doc in
+                    try? doc.data(as: T.self)
+                }
+                completion(items)
             }
-            let items: [T] = documents.compactMap { doc in
-                try? doc.data(as: T.self)
-            }
-            completion(items)
-        }
     }
     
     // MARK: - Fetchers
@@ -54,14 +82,16 @@ class DataStore: ObservableObject {
     }
     
     private func fetchTransactions() {
-        db.collection("transactions").order(by: "date", descending: true).addSnapshotListener { [weak self] snapshot, error in
-            guard let documents = snapshot?.documents else { return }
-            let items: [Transaction] = documents.compactMap { try? $0.data(as: Transaction.self) }
-            self?.transactions = items
-            
-            // Recalculate budgets spent amount
-            self?.recalculateBudgets(transactions: items)
-        }
+        guard let uid = currentUserId else { return }
+        db.collection("transactions")
+            .whereField("userId", isEqualTo: uid)
+            .order(by: "date", descending: true)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let documents = snapshot?.documents else { return }
+                let items: [Transaction] = documents.compactMap { try? $0.data(as: Transaction.self) }
+                self?.transactions = items
+                self?.recalculateBudgets(transactions: items)
+            }
     }
     
     private func fetchBudgets() {
@@ -106,20 +136,53 @@ class DataStore: ObservableObject {
         db.collection(collection).document(id).delete()
     }
     
-    // Transactions
-    func addTransaction(_ tx: Transaction) { saveDocument(collection: "transactions", id: tx.id, data: tx) }
+    // MARK: - Public Write APIs (userId otomatis disuntikkan)
+    
+    func addTransaction(_ tx: Transaction) {
+        guard let uid = currentUserId else { return }
+        var stamped = tx
+        stamped.userId = uid
+        saveDocument(collection: "transactions", id: stamped.id, data: stamped)
+    }
     func deleteTransaction(_ tx: Transaction) { deleteDocument(collection: "transactions", id: tx.id) }
     
-    // Budgets
-    func addBudget(_ b: Budget) { saveDocument(collection: "budgets", id: b.id, data: b) }
+    func addBudget(_ b: Budget) {
+        guard let uid = currentUserId else { return }
+        var stamped = b
+        stamped.userId = uid
+        saveDocument(collection: "budgets", id: stamped.id, data: stamped)
+    }
     func deleteBudget(_ b: Budget) { deleteDocument(collection: "budgets", id: b.id) }
     
-    // Savings
-    func addSavingsGoal(_ s: SavingsGoal) { saveDocument(collection: "savingsGoals", id: s.id, data: s) }
-    func updateSavingsGoal(_ s: SavingsGoal) { saveDocument(collection: "savingsGoals", id: s.id, data: s) }
+    func addSavingsGoal(_ s: SavingsGoal) {
+        guard let uid = currentUserId else { return }
+        var stamped = s
+        stamped.userId = uid
+        saveDocument(collection: "savingsGoals", id: stamped.id, data: stamped)
+    }
+    func updateSavingsGoal(_ s: SavingsGoal) {
+        guard let uid = currentUserId else { return }
+        var stamped = s
+        stamped.userId = uid
+        saveDocument(collection: "savingsGoals", id: stamped.id, data: stamped)
+    }
     func deleteSavingsGoal(_ s: SavingsGoal) { deleteDocument(collection: "savingsGoals", id: s.id) }
     
-    // Seed helper
-    func seedCategories(_ items: [Category]) { for item in items { saveDocument(collection: "categories", id: item.id, data: item) } }
-    func seedWallets(_ items: [Wallet]) { for item in items { saveDocument(collection: "wallets", id: item.id, data: item) } }
+    // Seed data default — otomatis di-stempel dengan userId
+    func seedCategories(_ items: [Category]) {
+        guard let uid = currentUserId else { return }
+        for item in items {
+            var stamped = item
+            stamped.userId = uid
+            saveDocument(collection: "categories", id: stamped.id, data: stamped)
+        }
+    }
+    func seedWallets(_ items: [Wallet]) {
+        guard let uid = currentUserId else { return }
+        for item in items {
+            var stamped = item
+            stamped.userId = uid
+            saveDocument(collection: "wallets", id: stamped.id, data: stamped)
+        }
+    }
 }

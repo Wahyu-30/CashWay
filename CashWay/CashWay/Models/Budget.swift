@@ -2,6 +2,7 @@ import Foundation
 
 struct Budget: Identifiable, Codable, Equatable, Hashable {
     var id: String
+    var userId: String       // Stempel pemilik: UID Google pengguna
     var amount: Decimal
     var month: Int
     var year: Int
@@ -14,12 +15,14 @@ struct Budget: Identifiable, Codable, Equatable, Hashable {
 
     init(
         id: String = UUID().uuidString,
+        userId: String = "",
         amount: Decimal,
         month: Int,
         year: Int,
         category: Category? = nil
     ) {
         self.id = id
+        self.userId = userId
         self.amount = amount
         self.month = month
         self.year = year

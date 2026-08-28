@@ -9,6 +9,7 @@ enum WalletType: String, Codable {
 
 struct Wallet: Identifiable, Codable, Equatable, Hashable {
     var id: String
+    var userId: String       // Stempel pemilik: UID Google pengguna
     var name: String
     var type: WalletType
     var icon: String
@@ -19,6 +20,7 @@ struct Wallet: Identifiable, Codable, Equatable, Hashable {
 
     init(
         id: String = UUID().uuidString,
+        userId: String = "",
         name: String,
         type: WalletType,
         icon: String,
@@ -28,6 +30,7 @@ struct Wallet: Identifiable, Codable, Equatable, Hashable {
         sortOrder: Int = 99
     ) {
         self.id = id
+        self.userId = userId
         self.name = name
         self.type = type
         self.icon = icon

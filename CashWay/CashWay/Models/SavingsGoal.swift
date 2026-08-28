@@ -2,6 +2,7 @@ import Foundation
 
 struct SavingsGoal: Identifiable, Codable, Equatable, Hashable {
     var id: String
+    var userId: String       // Stempel pemilik: UID Google pengguna
     var name: String
     var targetAmount: Decimal
     var currentAmount: Decimal
@@ -12,6 +13,7 @@ struct SavingsGoal: Identifiable, Codable, Equatable, Hashable {
 
     init(
         id: String = UUID().uuidString,
+        userId: String = "",
         name: String,
         targetAmount: Decimal,
         currentAmount: Decimal = 0,
@@ -21,6 +23,7 @@ struct SavingsGoal: Identifiable, Codable, Equatable, Hashable {
         createdAt: Date = .now
     ) {
         self.id = id
+        self.userId = userId
         self.name = name
         self.targetAmount = targetAmount
         self.currentAmount = currentAmount
