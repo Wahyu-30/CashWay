@@ -26,10 +26,6 @@ final class DashboardViewModel {
         Decimal(UserDefaults.standard.double(forKey: "monthlySalary"))
     }
 
-    var userName: String {
-        UserDefaults.standard.string(forKey: "userName") ?? "Way"
-    }
-
     // MARK: - Month Filter
     var monthTransactions: [Transaction] {
         let cal = Calendar.current

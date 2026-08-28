@@ -9,6 +9,7 @@ import Charts
 struct DashboardView: View {
 
     @EnvironmentObject private var dataStore: DataStore
+    @EnvironmentObject private var authManager: AuthManager
 
     @State private var vm = DashboardViewModel()
 
@@ -54,7 +55,7 @@ struct DashboardView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Hei, \(vm.userName) 👋")
+                Text("Hei, \(authManager.userNickname) 👋")
                     .font(.title2.bold())
                     .foregroundStyle(Color.cwTextPrimary)
                 Text(Date.now.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "id_ID"))))

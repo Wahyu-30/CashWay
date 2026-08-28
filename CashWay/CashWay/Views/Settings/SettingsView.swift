@@ -7,8 +7,6 @@ import SwiftUI
 // ============================================================
 
 struct SettingsView: View {
-
-    @AppStorage("userName")      private var userName      = "Way"
     @AppStorage("monthlySalary") private var monthlySalary = 4_500_000.0
     @AppStorage("iCloudSync")    private var iCloudSync    = false
 
@@ -16,6 +14,9 @@ struct SettingsView: View {
     @State private var showDeleteAlert = false
     @EnvironmentObject private var dataStore: DataStore
     @EnvironmentObject private var authManager: AuthManager
+
+    // Local state untuk TextField agar tidak glitch saat diketik
+    @State private var localNickname: String = ""
 
     var body: some View {
         List {
@@ -31,7 +32,10 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(Color.cwBackground)
         .navigationTitle("Pengaturan")
-        .onAppear { salaryText = String(Int(monthlySalary)) }
+        .onAppear { 
+            salaryText = String(Int(monthlySalary)) 
+            localNickname = authManager.userNickname
+        }
         .alert("Hapus Semua Data?", isPresented: $showDeleteAlert) {
             Button("Hapus", role: .destructive) { deleteAllData() }
             Button("Batal", role: .cancel) {}
@@ -45,8 +49,11 @@ struct SettingsView: View {
             HStack {
                 Image(systemName: "person.circle.fill")
                     .font(.title2).foregroundStyle(Color.cwAccent)
-                TextField("Nama kamu", text: $userName)
+                TextField("Nama kamu", text: $localNickname)
                     .foregroundStyle(Color.cwTextPrimary)
+                    .onChange(of: localNickname) { _, newValue in
+                        authManager.updateNickname(newValue)
+                    }
             }
         }
         .listRowBackground(Color.cwSurface)

@@ -19,6 +19,7 @@ class AuthManager: ObservableObject {
     @Published var user: FirebaseAuth.User?
     @Published var isAuthenticating: Bool = false
     @Published var errorMessage: String?
+    @Published var userNickname: String = "Pengguna"
     
     // Simpan handle agar listener aktif selama AuthManager hidup
     private var authListenerHandle: AuthStateDidChangeListenerHandle?
@@ -30,12 +31,35 @@ class AuthManager: ObservableObject {
     
     func startListening() {
         self.user = Auth.auth().currentUser
+        self.loadNickname(for: self.user)
         
         // Listener otomatis jika status login berubah (misal token expired, dsb)
         authListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 self?.user = user
+                self?.loadNickname(for: user)
             }
+        }
+    }
+    
+    func updateNickname(_ name: String) {
+        guard let uid = user?.uid else { return }
+        self.userNickname = name
+        UserDefaults.standard.set(name, forKey: "nickname_\(uid)")
+    }
+    
+    private func loadNickname(for user: FirebaseAuth.User?) {
+        guard let user = user else {
+            self.userNickname = "Pengguna"
+            return
+        }
+        let key = "nickname_\(user.uid)"
+        if let saved = UserDefaults.standard.string(forKey: key) {
+            self.userNickname = saved
+        } else {
+            let defaultName = user.displayName?.components(separatedBy: " ").first ?? "Pengguna"
+            self.userNickname = defaultName
+            UserDefaults.standard.set(defaultName, forKey: key)
         }
     }
     
