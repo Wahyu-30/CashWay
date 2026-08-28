@@ -213,7 +213,7 @@ v2.0 → Import CSV Rekening Koran + Advanced Analytics
 | Phase 7: UI Polish & Bug Fixes | ✅ Selesai | Animasi SlideInCard, App Icon macOS, Firebase Init Fix |
 | Phase 8: Laporan & Export | ⏳ Berjalan | PDF Export, Laporan lengkap |
 | Phase 9: Push Notifications | ⬜ Belum mulai | Reminder awal bulan & malam hari |
-| Phase 10: Firestore Security Rules | ⬜ Belum mulai | Kunci database berdasar `userId` |
+| Phase 10: Firestore Security Rules | ✅ Selesai | Kunci database berdasar `userId` |
 
 ---
 
