@@ -553,9 +553,35 @@ struct ReportsView: View {
                 expenseChart:  cachedExpenseChart,
                 monthlyTrend:  cachedMonthlyTrend
             )
-            pdfURL = await PDFExporter.generateURL(for: pdfView, filename: "CashWay-\(monthTitle)")
+            let tempURL = await PDFExporter.generateURL(for: pdfView, filename: "CashWay-\(monthTitle)")
             isGeneratingPDF = false
-            if pdfURL != nil { showShareSheet = true }
+            
+            if let tempURL = tempURL {
+                #if os(macOS)
+                let savePanel = NSSavePanel()
+                savePanel.allowedContentTypes = [.pdf]
+                savePanel.canCreateDirectories = true
+                savePanel.isExtensionHidden = false
+                savePanel.title = "Simpan Laporan PDF"
+                savePanel.message = "Pilih lokasi untuk menyimpan PDF laporan bulanan Anda."
+                savePanel.nameFieldStringValue = tempURL.lastPathComponent
+                
+                let response = savePanel.runModal()
+                if response == .OK, let targetURL = savePanel.url {
+                    do {
+                        if FileManager.default.fileExists(atPath: targetURL.path) {
+                            try FileManager.default.removeItem(at: targetURL)
+                        }
+                        try FileManager.default.copyItem(at: tempURL, to: targetURL)
+                    } catch {
+                        print("ReportsView: Gagal menyimpan PDF - \(error)")
+                    }
+                }
+                #else
+                self.pdfURL = tempURL
+                self.showShareSheet = true
+                #endif
+            }
         }
     }
 
@@ -587,23 +613,7 @@ struct ShareSheet: UIViewControllerRepresentable {
 struct ShareSheet: View {
     let url: URL
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "doc.fill").font(.largeTitle).foregroundStyle(Color.cwAccent)
-            Text("PDF siap!").font(.headline)
-            Text(url.lastPathComponent).font(.caption).foregroundStyle(.secondary)
-            HStack {
-                Button("Buka di Finder") {
-                    NSWorkspace.shared.activateFileViewerSelecting([url])
-                }
-                Button("Salin Lokasi File") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(url.path, forType: .string)
-                }
-                .buttonStyle(.borderedProminent)
-            }
-        }
-        .padding(32)
-        .frame(width: 320)
+        Text("PDF Saved") // Dummy view, tidak akan pernah dipanggil karena macOS pakai NSSavePanel
     }
 }
 #endif
