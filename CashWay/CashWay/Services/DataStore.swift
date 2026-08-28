@@ -50,12 +50,11 @@ class DataStore: ObservableObject {
         savingsGoals = []
     }
     
-    // MARK: - Generic Fetcher (dengan filter userId)
-    private func fetchCollection<T: Codable>(collection: String, sortField: String, completion: @escaping ([T]) -> Void) {
+    // MARK: - Generic Fetcher (tanpa order di Firestore — hindari composite index)
+    private func fetchCollection<T: Codable>(collection: String, completion: @escaping ([T]) -> Void) {
         guard let uid = currentUserId else { return }
         db.collection(collection)
             .whereField("userId", isEqualTo: uid)
-            .order(by: sortField, descending: false)
             .addSnapshotListener { snapshot, error in
                 guard let documents = snapshot?.documents else {
                     print("Error fetching \(collection): \(error?.localizedDescription ?? "Unknown")")
@@ -68,16 +67,16 @@ class DataStore: ObservableObject {
             }
     }
     
-    // MARK: - Fetchers
+    // MARK: - Fetchers (sorting dilakukan di sisi client)
     private func fetchCategories() {
-        fetchCollection(collection: "categories", sortField: "sortOrder") { [weak self] items in
-            self?.categories = items
+        fetchCollection(collection: "categories") { [weak self] (items: [Category]) in
+            self?.categories = items.sorted { $0.sortOrder < $1.sortOrder }
         }
     }
     
     private func fetchWallets() {
-        fetchCollection(collection: "wallets", sortField: "sortOrder") { [weak self] items in
-            self?.wallets = items
+        fetchCollection(collection: "wallets") { [weak self] (items: [Wallet]) in
+            self?.wallets = items.sorted { $0.sortOrder < $1.sortOrder }
         }
     }
     
@@ -85,26 +84,27 @@ class DataStore: ObservableObject {
         guard let uid = currentUserId else { return }
         db.collection("transactions")
             .whereField("userId", isEqualTo: uid)
-            .order(by: "date", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let documents = snapshot?.documents else { return }
-                let items: [Transaction] = documents.compactMap { try? $0.data(as: Transaction.self) }
+                let items: [Transaction] = documents
+                    .compactMap { try? $0.data(as: Transaction.self) }
+                    .sorted { $0.date > $1.date }
                 self?.transactions = items
                 self?.recalculateBudgets(transactions: items)
             }
     }
     
     private func fetchBudgets() {
-        fetchCollection(collection: "budgets", sortField: "month") { [weak self] items in
+        fetchCollection(collection: "budgets") { [weak self] (items: [Budget]) in
             guard let self = self else { return }
-            self.budgets = items
+            self.budgets = items.sorted { $0.month < $1.month }
             self.recalculateBudgets(transactions: self.transactions)
         }
     }
     
     private func fetchSavingsGoals() {
-        fetchCollection(collection: "savingsGoals", sortField: "createdAt") { [weak self] items in
-            self?.savingsGoals = items
+        fetchCollection(collection: "savingsGoals") { [weak self] (items: [SavingsGoal]) in
+            self?.savingsGoals = items.sorted { $0.createdAt < $1.createdAt }
         }
     }
     
