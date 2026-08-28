@@ -50,6 +50,14 @@ struct CurrencyFormatter {
         }
     }
 
+    /// Format singkat untuk kolom tabel — tapi tetap mudah dibaca.
+    /// Di bawah 10jt tampilkan penuh, di atasnya kompak.
+    static func formatShort(_ amount: Decimal) -> String {
+        let d = NSDecimalNumber(decimal: amount).doubleValue
+        if d >= 10_000_000 { return formatCompact(amount) }
+        return format(amount)
+    }
+
     // MARK: - Parse dari String
 
     /// Parse input teks ke Decimal.

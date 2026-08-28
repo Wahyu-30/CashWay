@@ -211,7 +211,7 @@ v2.0 → Import CSV Rekening Koran + Advanced Analytics
 | Phase 5: Migrasi Firebase | ✅ Selesai | Data realtime via Firestore (Cloud Sync) |
 | Phase 6: Autentikasi Google | ✅ Selesai | Google Sign-In macOS & iOS via Firebase Auth |
 | Phase 7: UI Polish & Bug Fixes | ✅ Selesai | Animasi SlideInCard, App Icon macOS, Firebase Init Fix |
-| Phase 8: Laporan & Export | ⏳ Berjalan | PDF Export, Laporan lengkap |
+| Phase 8: Laporan & Export | ✅ Selesai | Tabel Anggaran bergaya dashboard + Export PDF |
 | Phase 9: Push Notifications | ✅ Selesai | Reminder harian & awal bulan |
 | Phase 10: Firestore Security Rules | ✅ Selesai | Kunci database berdasar `userId` |
 

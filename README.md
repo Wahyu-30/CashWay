@@ -145,9 +145,13 @@ Saat ini CashWay telah menyelesaikan implementasi fitur inti beserta cloud sync 
 - **Nama Dinamis:** Sapaan di Dashboard dan profil sidebar otomatis menggunakan nama akun Google.
 - **Local Notifications:** Pengingat harian (default 20:00) & pengingat awal bulan (default 09:00 tanggal 1) yang dapat dikustomisasi oleh pengguna di Pengaturan.
 - **Banner Kedaluwarsa Sertifikat:** Peringatan di Dashboard jika sertifikat Apple Developer Gratis (7 hari) akan segera habis.
+- **Laporan Dashboard Profesional:** Halaman Laporan dirombak total menjadi tabel bergaya dashboard (Anggaran · Realisasi · Progress · % Pakai) lengkap dengan grafik donut & tren 12 bulan.
+- **Export PDF:** Laporan bulanan bisa diekspor sebagai file PDF berkualitas tinggi dan dibagikan langsung dari aplikasi.
 
-⏳ **Akan Datang (Belum Selesai):**
-1. **Export PDF:** Untuk pelaporan keuangan bulanan yang bisa dicetak atau dibagikan.
+⏳ **Akan Datang (Rencana v2.0):**
+1. **Investasi / Portfolio Tracker:** Pantau aset saham, reksa dana, kripto.
+2. **Kolaborasi:** Budget bersama untuk pasangan atau keluarga.
+3. **Import Rekening Bank:** Sinkronisasi otomatis mutasi via Open Banking API.
 
 ---
 
