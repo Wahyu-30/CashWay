@@ -67,13 +67,13 @@ struct PDFExporter {
 
         pdfCtx.beginPDFPage(nil)
 
-        // Flip koordinat macOS (Y-axis terbalik)
-        pdfCtx.translateBy(x: 0, y: pageSize.height)
-        pdfCtx.scaleBy(x: 1, y: -1)
-
-        if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            pdfCtx.draw(cgImage, in: CGRect(origin: .zero, size: pageSize))
-        }
+        // Gunakan NSGraphicsContext dengan flipped:true agar NSImage
+        // digambar dari kiri-atas — mencegah output terbalik di PDF.
+        let nsGC = NSGraphicsContext(cgContext: pdfCtx, flipped: true)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = nsGC
+        nsImage.draw(in: NSRect(origin: .zero, size: pageSize))
+        NSGraphicsContext.restoreGraphicsState()
 
         pdfCtx.endPDFPage()
         pdfCtx.closePDF()
