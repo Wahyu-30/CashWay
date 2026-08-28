@@ -139,12 +139,15 @@ Saat ini CashWay telah menyelesaikan implementasi fitur inti beserta cloud sync 
 - Smooth UI Animations (`SlideInCard`) di semua halaman utama
 - **App Icon macOS & iOS:** Full generator icon multi-resolusi.
 - **Perbaikan Bug Internal:** Penyempurnaan urutan inisialisasi Firebase & StateObject untuk mencegah *memory leak* dan log error.
+- **Isolasi Data Per Akun Google:** `userId` scoping di seluruh model data, sehingga tiap pengguna hanya melihat datanya sendiri.
+- **Firebase Security Rules:** Database dikunci menggunakan `userId` di Firebase Console.
+- **Login/Logout Multi-Akun:** User bisa ganti akun Google, data tidak bocor antar akun.
+- **Nama Dinamis:** Sapaan di Dashboard dan profil sidebar otomatis menggunakan nama akun Google.
+- **Local Notifications:** Pengingat harian (default 20:00) & pengingat awal bulan (default 09:00 tanggal 1) yang dapat dikustomisasi oleh pengguna di Pengaturan.
+- **Banner Kedaluwarsa Sertifikat:** Peringatan di Dashboard jika sertifikat Apple Developer Gratis (7 hari) akan segera habis.
 
 ⏳ **Akan Datang (Belum Selesai):**
-1. **Push Notifications (Reminders):** Fitur pengingat mencatat pemasukan (tanggal 1 awal bulan) dan pengingat mencatat pengeluaran harian (malam hari).
-2. **Data Privacy (Firestore Security Rules):** Mengubah rules database agar user hanya bisa melihat & mengedit datanya sendiri berdasarkan `userId`.
-3. **Data Scoping:** Memasukkan `userId` ke dalam model data (Transaction, Budget, SavingsGoal) agar sinkronisasi benar-benar terpisah per pengguna.
-4. **Export PDF:** Untuk pelaporan.
+1. **Export PDF:** Untuk pelaporan keuangan bulanan yang bisa dicetak atau dibagikan.
 
 ---
 

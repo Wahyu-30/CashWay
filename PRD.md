@@ -47,10 +47,13 @@ Membangun aplikasi **offline-first** yang memungkinkan pengguna:
 - ✅ Dashboard dengan chart bulanan
 - ✅ Budget per kategori per bulan
 - ✅ Notifikasi budget (in-app)
+- ✅ Notifikasi pengingat lokal (harian 20:00 & awal bulan 09:00, jam bisa diubah)
 - ✅ Filter & pencarian riwayat transaksi
 - ✅ Export PDF laporan bulanan
 - ✅ Dark mode (default)
 - ✅ iCloud sync antar perangkat (opsional, via toggle)
+- ✅ Isolasi data per akun Google (userId scoping)
+- ✅ Login/Logout multi-akun Google
 
 ### Out of Scope (Versi 1.0)
 - ❌ Import otomatis dari rekening bank (API banking)
