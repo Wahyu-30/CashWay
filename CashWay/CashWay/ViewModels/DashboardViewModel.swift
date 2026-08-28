@@ -21,6 +21,12 @@ final class DashboardViewModel {
     private var allTransactions: [Transaction] = []
     private var allBudgets:      [Budget]      = []
 
+    var daysUntilExpiration: Int? {
+        guard let expiry = ProvisioningInfo.expirationDate() else { return nil }
+        let components = Calendar.current.dateComponents([.day], from: Date(), to: expiry)
+        return components.day
+    }
+
     // MARK: - Settings
     var monthlySalary: Decimal {
         Decimal(UserDefaults.standard.double(forKey: "monthlySalary"))

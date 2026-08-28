@@ -17,7 +17,12 @@ struct DashboardView: View {
         ScrollView {
             VStack(spacing: CWSpacing.lg) {
                 SlideInCard(index: 0) { headerSection }
-                SlideInCard(index: 1) { balanceCard }
+                
+                if let days = vm.daysUntilExpiration {
+                    SlideInCard(index: 1) { expirationBanner(days: days) }
+                }
+                
+                SlideInCard(index: 2) { balanceCard }
                 SlideInCard(index: 2) { overspendingBanner }
                 SlideInCard(index: 3) { incomeBreakdownSection }
                 SlideInCard(index: 4) { chartSection }
@@ -249,6 +254,30 @@ struct DashboardView: View {
                 )
             }
         }
+    // MARK: - Expiration Banner
+    @ViewBuilder
+    private func expirationBanner(days: Int) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "timer")
+                .font(.title2)
+                .foregroundStyle(Color(hex: "#FFA500"))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(days > 0 ? "Expired dalam \(days) hari" : "Sertifikat Kedaluwarsa!")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.cwTextPrimary)
+                Text(days > 0 ? "Hubungkan ke Xcode di Mac untuk me-refresh lisensi Apple Developer Gratis." : "Aplikasi mungkin tidak bisa dibuka lagi. Segera hubungkan ke Xcode!")
+                    .font(.caption)
+                    .foregroundStyle(Color.cwTextSecondary)
+            }
+            Spacer()
+        }
+        .padding(CWSpacing.md)
+        .background(Color(hex: "#FFA500").opacity(0.1))
+        .cornerRadius(CWRadius.lg)
+        .overlay(
+            RoundedRectangle(cornerRadius: CWRadius.lg)
+                .stroke(Color(hex: "#FFA500").opacity(0.3), lineWidth: 1)
+        )
     }
 
     // MARK: - Income vs Expense Chart
