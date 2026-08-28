@@ -50,131 +50,19 @@ struct ReportsView: View {
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: .now)
     @State private var selectedYear:  Int = Calendar.current.component(.year,  from: .now)
     @State private var pdfURL: URL?
-    @State private var showShareSheet = false
+    @State private var showShareSheet  = false
     @State private var isGeneratingPDF = false
+    @State private var isComputing     = false
 
-    // MARK: - Computed: Transactions
-
-    private var monthTx: [Transaction] {
-        let cal = Calendar.current
-        return dataStore.transactions.filter {
-            cal.component(.month, from: $0.date) == selectedMonth &&
-            cal.component(.year,  from: $0.date) == selectedYear
-        }
-    }
-    private var expenseTx: [Transaction] { monthTx.filter { $0.type == .expense } }
-    private var incomeTx:  [Transaction] { monthTx.filter { $0.type == .income  } }
-
-    private var totalExpense: Decimal { expenseTx.reduce(0) { $0 + $1.amount } }
-    private var totalIncome:  Decimal { incomeTx.reduce(0)  { $0 + $1.amount } }
-    private var netSaving:    Decimal { totalIncome - totalExpense }
-
-    // MARK: - Computed: Wallet Total Balance
-    private var totalWalletBalance: Decimal {
-        let initialTotal = dataStore.wallets.reduce(Decimal(0)) { $0 + $1.initialBalance }
-        let allIncome    = dataStore.transactions.filter { $0.type == .income  }.reduce(Decimal(0)) { $0 + $1.amount }
-        let allExpense   = dataStore.transactions.filter { $0.type == .expense }.reduce(Decimal(0)) { $0 + $1.amount }
-        return initialTotal + allIncome - allExpense
-    }
-
-    // MARK: - Computed: Budget Table Rows
-    private var budgetTableRows: [BudgetTableRow] {
-        let monthBudgets = dataStore.budgets.filter {
-            $0.month == selectedMonth && $0.year == selectedYear
-        }
-
-        // Hitung pengeluaran per kategori bulan ini
-        var spendingMap: [String: (name: String, colorHex: String, amount: Decimal)] = [:]
-        for tx in expenseTx {
-            let catId    = tx.category?.id       ?? "other"
-            let catName  = tx.category?.name     ?? "Lainnya"
-            let catColor = tx.category?.colorHex ?? "#8B8FA8"
-            if let existing = spendingMap[catId] {
-                spendingMap[catId] = (name: catName, colorHex: catColor, amount: existing.amount + tx.amount)
-            } else {
-                spendingMap[catId] = (name: catName, colorHex: catColor, amount: tx.amount)
-            }
-        }
-
-        var rows: [BudgetTableRow] = []
-        var handled: Set<String> = []
-
-        // Pertama: kategori yang punya anggaran
-        for budget in monthBudgets {
-            let catId  = budget.category?.id ?? ""
-            handled.insert(catId)
-            let spending = spendingMap[catId]?.amount ?? 0
-            rows.append(BudgetTableRow(
-                id:           catId.isEmpty ? UUID().uuidString : catId,
-                categoryName: budget.category?.name     ?? "Lainnya",
-                colorHex:     budget.category?.colorHex ?? "#8B8FA8",
-                budgeted:     budget.amount,
-                spent:        spending
-            ))
-        }
-
-        // Kedua: kategori yang ada transaksinya tapi tidak punya anggaran
-        for (catId, info) in spendingMap where !handled.contains(catId) {
-            rows.append(BudgetTableRow(
-                id:           catId,
-                categoryName: info.name,
-                colorHex:     info.colorHex,
-                budgeted:     nil,
-                spent:        info.amount
-            ))
-        }
-
-        return rows.sorted {
-            // Kategori ber-anggaran duluan, lalu urut pengeluaran terbesar
-            let aHas = $0.budgeted != nil
-            let bHas = $1.budgeted != nil
-            if aHas != bHas { return aHas }
-            return $0.spent > $1.spent
-        }
-    }
-
-    // MARK: - Computed: Income Breakdown
-    private var incomeByCategory: [(name: String, amount: Decimal, colorHex: String)] {
-        Dictionary(grouping: incomeTx) { $0.category?.name ?? "Lainnya" }
-            .map { key, txs in (
-                name:     key,
-                amount:   txs.reduce(0) { $0 + $1.amount },
-                colorHex: txs.first?.category?.colorHex ?? "#4CAF82"
-            )}
-            .sorted { $0.amount > $1.amount }
-    }
-
-    // MARK: - Computed: Pie Chart (Expense)
-    private var expenseByCategory: [(name: String, amount: Double, colorHex: String)] {
-        budgetTableRows.filter { $0.spent > 0 }.map {
-            (name: $0.categoryName,
-             amount: NSDecimalNumber(decimal: $0.spent).doubleValue,
-             colorHex: $0.colorHex)
-        }
-    }
-
-    // MARK: - Computed: Monthly Trend (12 bulan)
-    private var monthlyTrend: [(month: String, amount: Double)] {
-        let cal = Calendar.current
-        let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "id_ID")
-        fmt.dateFormat = "MMM"
-        var result: [(month: String, amount: Double)] = []
-        for i in stride(from: 11, through: 0, by: -1) {
-            let comps = DateComponents(year: selectedYear, month: selectedMonth - i)
-            let date  = cal.date(from: comps) ?? Date()
-            let m = cal.component(.month, from: date)
-            let y = cal.component(.year,  from: date)
-            let total = dataStore.transactions
-                .filter { $0.type == .expense &&
-                    cal.component(.month, from: $0.date) == m &&
-                    cal.component(.year,  from: $0.date) == y }
-                .reduce(Decimal(0)) { $0 + $1.amount }
-            result.append((month: fmt.string(from: date),
-                           amount: NSDecimalNumber(decimal: total).doubleValue))
-        }
-        return result
-    }
+    // MARK: - Cached Data (diisi oleh recompute())
+    @State private var cachedBudgetRows:      [BudgetTableRow] = []
+    @State private var cachedIncomeRows:      [(name: String, amount: Decimal, colorHex: String)] = []
+    @State private var cachedExpenseChart:    [(name: String, amount: Double, colorHex: String)] = []
+    @State private var cachedMonthlyTrend:    [(month: String, amount: Double)] = []
+    @State private var cachedTotalIncome:     Decimal = 0
+    @State private var cachedTotalExpense:    Decimal = 0
+    @State private var cachedNetSaving:       Decimal = 0
+    @State private var cachedWalletBalance:   Decimal = 0
 
     // MARK: - Body
 
@@ -183,9 +71,15 @@ struct ReportsView: View {
             VStack(spacing: CWSpacing.lg) {
                 SlideInCard(index: 0) { monthNavigator }
                 SlideInCard(index: 1) { summaryCards }
-                SlideInCard(index: 2) { budgetTableSection }
-                SlideInCard(index: 3) { incomeTableSection }
-                SlideInCard(index: 4) { chartsSection }
+                if isComputing {
+                    ProgressView("Menghitung data...")
+                        .frame(maxWidth: .infinity)
+                        .padding(CWSpacing.xl)
+                } else {
+                    SlideInCard(index: 2) { budgetTableSection }
+                    SlideInCard(index: 3) { incomeTableSection }
+                    SlideInCard(index: 4) { chartsSection }
+                }
             }
             .padding(CWSpacing.md)
         }
@@ -196,10 +90,13 @@ struct ReportsView: View {
         #endif
         .toolbar { toolbarContent }
         .sheet(isPresented: $showShareSheet) {
-            if let url = pdfURL {
-                ShareSheet(url: url)
-            }
+            if let url = pdfURL { ShareSheet(url: url) }
         }
+        .onAppear { recompute() }
+        .onChange(of: selectedMonth)             { recompute() }
+        .onChange(of: selectedYear)              { recompute() }
+        .onChange(of: dataStore.transactions.count) { recompute() }
+        .onChange(of: dataStore.budgets.count)   { recompute() }
     }
 
     // MARK: - Toolbar
@@ -249,12 +146,12 @@ struct ReportsView: View {
     private var summaryCards: some View {
         VStack(spacing: CWSpacing.sm) {
             HStack(spacing: CWSpacing.sm) {
-                summaryCard(label: "Total Pemasukan",  amount: totalIncome,  color: Color(hex: "#4CAF82"))
-                summaryCard(label: "Tabungan Bulan Ini", amount: netSaving >= 0 ? netSaving : 0, color: Color(hex: "#1c6cff"))
+                summaryCard(label: "Total Pemasukan",   amount: cachedTotalIncome,   color: Color(hex: "#4CAF82"))
+                summaryCard(label: "Tabungan Bulan Ini", amount: cachedNetSaving >= 0 ? cachedNetSaving : 0, color: Color(hex: "#1c6cff"))
             }
             HStack(spacing: CWSpacing.sm) {
-                summaryCard(label: "Total Pengeluaran", amount: totalExpense,        color: Color(hex: "#FF6B6B"))
-                summaryCard(label: "Total Saldo Dompet", amount: totalWalletBalance, color: Color.cwTextPrimary)
+                summaryCard(label: "Total Pengeluaran",  amount: cachedTotalExpense,  color: Color(hex: "#FF6B6B"))
+                summaryCard(label: "Total Saldo Dompet", amount: cachedWalletBalance, color: Color.cwTextPrimary)
             }
         }
     }
@@ -277,29 +174,144 @@ struct ReportsView: View {
         .overlay(RoundedRectangle(cornerRadius: CWRadius.md).stroke(Color.cwBorder, lineWidth: 1))
     }
 
+    // MARK: - Recompute (background)
+    private func recompute() {
+        guard !isComputing else { return }
+        isComputing = true
+
+        let cal       = Calendar.current
+        let month     = selectedMonth
+        let year      = selectedYear
+        let allTx     = dataStore.transactions
+        let budgets   = dataStore.budgets
+        let wallets   = dataStore.wallets
+
+        Task.detached(priority: .userInitiated) {
+            // Precompute month/year sekali untuk setiap transaksi (hindari O(n×12))
+            let tagged = allTx.map { tx -> (tx: Transaction, m: Int, y: Int) in
+                (tx: tx,
+                 m: cal.component(.month, from: tx.date),
+                 y: cal.component(.year,  from: tx.date))
+            }
+
+            let monthTx   = tagged.filter { $0.m == month && $0.y == year }
+            let expenseTx = monthTx.filter { $0.tx.type == .expense }
+            let incomeTx  = monthTx.filter { $0.tx.type == .income  }
+
+            let totalExpense  = expenseTx.reduce(Decimal(0)) { $0 + $1.tx.amount }
+            let totalIncome   = incomeTx.reduce(Decimal(0))  { $0 + $1.tx.amount }
+            let netSaving     = totalIncome - totalExpense
+
+            let initialTotal  = wallets.reduce(Decimal(0)) { $0 + $1.initialBalance }
+            let allIncome     = allTx.filter { $0.type == .income  }.reduce(Decimal(0)) { $0 + $1.amount }
+            let allExpense    = allTx.filter { $0.type == .expense }.reduce(Decimal(0)) { $0 + $1.amount }
+            let walletBalance = initialTotal + allIncome - allExpense
+
+            // --- Budget Rows ---
+            let monthBudgets = budgets.filter { $0.month == month && $0.year == year }
+            var spendingMap: [String: (name: String, colorHex: String, amount: Decimal)] = [:]
+            for item in expenseTx {
+                let catId = item.tx.category?.id ?? "other"
+                let name  = item.tx.category?.name     ?? "Lainnya"
+                let color = item.tx.category?.colorHex ?? "#8B8FA8"
+                if let ex = spendingMap[catId] {
+                    spendingMap[catId] = (name: name, colorHex: color, amount: ex.amount + item.tx.amount)
+                } else {
+                    spendingMap[catId] = (name: name, colorHex: color, amount: item.tx.amount)
+                }
+            }
+            var handled: Set<String> = []
+            var budgetRows: [BudgetTableRow] = []
+            for b in monthBudgets {
+                let catId = b.category?.id ?? ""
+                handled.insert(catId)
+                budgetRows.append(BudgetTableRow(
+                    id: catId.isEmpty ? UUID().uuidString : catId,
+                    categoryName: b.category?.name     ?? "Lainnya",
+                    colorHex:     b.category?.colorHex ?? "#8B8FA8",
+                    budgeted: b.amount,
+                    spent:    spendingMap[catId]?.amount ?? 0))
+            }
+            for (catId, info) in spendingMap where !handled.contains(catId) {
+                budgetRows.append(BudgetTableRow(id: catId, categoryName: info.name, colorHex: info.colorHex, budgeted: nil, spent: info.amount))
+            }
+            budgetRows.sort {
+                let aH = $0.budgeted != nil; let bH = $1.budgeted != nil
+                if aH != bH { return aH }
+                return $0.spent > $1.spent
+            }
+
+            // --- Income by Category ---
+            var incomeDict: [String: (name: String, amount: Decimal, colorHex: String)] = [:]
+            for item in incomeTx {
+                let name  = item.tx.category?.name     ?? "Lainnya"
+                let color = item.tx.category?.colorHex ?? "#4CAF82"
+                if let ex = incomeDict[name] {
+                    incomeDict[name] = (name: name, amount: ex.amount + item.tx.amount, colorHex: color)
+                } else {
+                    incomeDict[name] = (name: name, amount: item.tx.amount, colorHex: color)
+                }
+            }
+            let incomeRows = incomeDict.values.sorted { $0.amount > $1.amount }
+                .map { (name: $0.name, amount: $0.amount, colorHex: $0.colorHex) }
+
+            let expenseChart = budgetRows.filter { $0.spent > 0 }
+                .map { (name: $0.categoryName, amount: NSDecimalNumber(decimal: $0.spent).doubleValue, colorHex: $0.colorHex) }
+
+            // --- Monthly Trend — O(n) karena pakai dictionary ---
+            var monthlyExpense: [String: Double] = [:]
+            for item in tagged where item.tx.type == .expense {
+                let key = "\(item.y)-\(item.m)"
+                monthlyExpense[key, default: 0] += NSDecimalNumber(decimal: item.tx.amount).doubleValue
+            }
+            let fmt = DateFormatter()
+            fmt.locale = Locale(identifier: "id_ID")
+            fmt.dateFormat = "MMM"
+            var trend: [(month: String, amount: Double)] = []
+            for i in stride(from: 11, through: 0, by: -1) {
+                let comps = DateComponents(year: year, month: month - i)
+                let date  = cal.date(from: comps) ?? Date()
+                let m2 = cal.component(.month, from: date)
+                let y2 = cal.component(.year,  from: date)
+                trend.append((month: fmt.string(from: date), amount: monthlyExpense["\(y2)-\(m2)"] ?? 0))
+            }
+
+            // Balik ke main thread untuk update UI
+            await MainActor.run {
+                self.cachedBudgetRows    = budgetRows
+                self.cachedIncomeRows    = incomeRows
+                self.cachedExpenseChart  = expenseChart
+                self.cachedMonthlyTrend  = trend
+                self.cachedTotalIncome   = totalIncome
+                self.cachedTotalExpense  = totalExpense
+                self.cachedNetSaving     = netSaving
+                self.cachedWalletBalance = walletBalance
+                self.isComputing         = false
+            }
+        }
+    }
+
     // MARK: - Budget Table
     private var budgetTableSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Judul
             Text("Daftar Pengeluaran per Kategori")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.cwTextSecondary)
                 .padding(.bottom, CWSpacing.sm)
 
             VStack(spacing: 0) {
-                // Header baris
                 budgetTableHeader
 
-                if budgetTableRows.isEmpty {
+                if cachedBudgetRows.isEmpty {
                     Text("Belum ada pengeluaran bulan ini")
                         .font(.caption)
                         .foregroundStyle(Color.cwTextSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(CWSpacing.lg)
                 } else {
-                    ForEach(Array(budgetTableRows.enumerated()), id: \.element.id) { idx, row in
+                    ForEach(Array(cachedBudgetRows.enumerated()), id: \.element.id) { idx, row in
                         budgetTableRow(row, isEven: idx.isMultiple(of: 2))
-                        if row.id != budgetTableRows.last?.id {
+                        if row.id != cachedBudgetRows.last?.id {
                             Divider().background(Color.cwBorder)
                         }
                     }
@@ -403,14 +415,14 @@ struct ReportsView: View {
                 .padding(.vertical, CWSpacing.sm)
                 .background(Color(hex: "#1a6b6b"))
 
-                if incomeByCategory.isEmpty {
+                if cachedIncomeRows.isEmpty {
                     Text("Belum ada pemasukan bulan ini")
                         .font(.caption)
                         .foregroundStyle(Color.cwTextSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(CWSpacing.lg)
                 } else {
-                    ForEach(Array(incomeByCategory.enumerated()), id: \.element.name) { idx, item in
+                    ForEach(Array(cachedIncomeRows.enumerated()), id: \.element.name) { idx, item in
                         HStack(spacing: 8) {
                             HStack(spacing: 6) {
                                 Circle()
@@ -428,8 +440,8 @@ struct ReportsView: View {
                                 .foregroundStyle(Color(hex: "#4CAF82"))
                                 .frame(width: 110, alignment: .trailing)
 
-                            let pct = totalIncome > 0
-                                ? Int(NSDecimalNumber(decimal: item.amount / totalIncome).doubleValue * 100)
+                            let pct = cachedTotalIncome > 0
+                                ? Int(NSDecimalNumber(decimal: item.amount / cachedTotalIncome).doubleValue * 100)
                                 : 0
                             Text("\(pct)%")
                                 .font(.caption.monospacedDigit())
@@ -439,7 +451,7 @@ struct ReportsView: View {
                         .padding(.horizontal, CWSpacing.md)
                         .padding(.vertical, 10)
                         .background(idx.isMultiple(of: 2) ? Color.cwSurface : Color.cwBackground.opacity(0.5))
-                        if item.name != incomeByCategory.last?.name {
+                        if item.name != cachedIncomeRows.last?.name {
                             Divider().background(Color.cwBorder)
                         }
                     }
@@ -459,10 +471,10 @@ struct ReportsView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.cwTextSecondary)
 
-                if expenseByCategory.isEmpty {
+                if cachedExpenseChart.isEmpty {
                     emptyChartPlaceholder(icon: "chart.pie.fill", text: "Belum ada data pengeluaran")
                 } else {
-                    Chart(expenseByCategory, id: \.name) { item in
+                    Chart(cachedExpenseChart, id: \.name) { item in
                         SectorMark(
                             angle: .value("Jumlah", item.amount),
                             innerRadius: .ratio(0.5),
@@ -471,7 +483,7 @@ struct ReportsView: View {
                         .foregroundStyle(Color(hex: item.colorHex))
                         .cornerRadius(4)
                         .annotation(position: .overlay) {
-                            if item.amount / (expenseByCategory.reduce(0) { $0 + $1.amount }) > 0.08 {
+                            if item.amount / (cachedExpenseChart.reduce(0) { $0 + $1.amount }) > 0.08 {
                                 Text(item.name)
                                     .font(.system(size: 9, weight: .semibold))
                                     .foregroundStyle(.white)
@@ -491,7 +503,7 @@ struct ReportsView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.cwTextSecondary)
 
-                Chart(monthlyTrend, id: \.month) { item in
+                Chart(cachedMonthlyTrend, id: \.month) { item in
                     BarMark(
                         x: .value("Bulan", item.month),
                         y: .value("Jumlah", item.amount)
@@ -540,15 +552,15 @@ struct ReportsView: View {
         isGeneratingPDF = true
         Task {
             let pdfView = ReportPDFContent(
-                monthTitle:      monthTitle,
-                totalIncome:     totalIncome,
-                totalExpense:    totalExpense,
-                netSaving:       netSaving,
-                walletBalance:   totalWalletBalance,
-                budgetRows:      budgetTableRows,
-                incomeRows:      incomeByCategory,
-                expenseChart:    expenseByCategory,
-                monthlyTrend:    monthlyTrend
+                monthTitle:    monthTitle,
+                totalIncome:   cachedTotalIncome,
+                totalExpense:  cachedTotalExpense,
+                netSaving:     cachedNetSaving,
+                walletBalance: cachedWalletBalance,
+                budgetRows:    cachedBudgetRows,
+                incomeRows:    cachedIncomeRows,
+                expenseChart:  cachedExpenseChart,
+                monthlyTrend:  cachedMonthlyTrend
             )
             pdfURL = await PDFExporter.generateURL(for: pdfView, filename: "CashWay-\(monthTitle)")
             isGeneratingPDF = false
