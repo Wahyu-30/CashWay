@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
 import GoogleSignIn
 
 // ============================================================
@@ -83,24 +84,19 @@ struct CashWayApp: App {
                 GIDSignIn.sharedInstance.handle(url)
             }
             .onAppear {
-                // Start Firestore listeners AFTER app appears
-                dataStore.startListening()
-                
-                // Seed initial data if empty
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    if dataStore.categories.isEmpty {
-                        dataStore.seedCategories(DefaultData.expenseCategories.enumerated().map {
-                            Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .expense, isDefault: true, sortOrder: $0)
-                        })
-                        dataStore.seedCategories(DefaultData.incomeCategories.enumerated().map {
-                            Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .income, isDefault: true, sortOrder: $0)
-                        })
-                    }
-                    if dataStore.wallets.isEmpty {
-                        dataStore.seedWallets(DefaultData.defaultWallets.enumerated().map {
-                            Wallet(name: $1.name, type: $1.type, icon: $1.icon, colorHex: $1.color, initialBalance: 0, isDefault: $1.isDefault, sortOrder: $0)
-                        })
-                    }
+                // Start Firestore listeners AFTER app appears (untuk pertama kali atau jika sudah login)
+                if authManager.isAuthenticated {
+                    dataStore.startListening()
+                    seedIfNeeded(dataStore: dataStore)
+                }
+            }
+            .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
+                if isAuthenticated {
+                    // User baru saja login — mulai listeners & seed jika perlu
+                    dataStore.startListening()
+                    seedIfNeeded(dataStore: dataStore)
+                } else {
+                    // User logout — listeners sudah dimatikan via clearData() di SettingsView
                 }
             }
         }
@@ -109,5 +105,29 @@ struct CashWayApp: App {
         .windowToolbarStyle(.unified)
         .defaultSize(width: 1100, height: 700)
         #endif
+    }
+    
+    // Seed data default hanya sekali per akun Google
+    private func seedIfNeeded(dataStore: DataStore) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            let seedKey = "seeded_\(uid)"
+            
+            // Sudah pernah di-seed → lewati
+            guard !UserDefaults.standard.bool(forKey: seedKey) else { return }
+            
+            // Tandai dulu sebelum seed (hindari race condition)
+            UserDefaults.standard.set(true, forKey: seedKey)
+            
+            dataStore.seedCategories(DefaultData.expenseCategories.enumerated().map {
+                Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .expense, isDefault: true, sortOrder: $0)
+            })
+            dataStore.seedCategories(DefaultData.incomeCategories.enumerated().map {
+                Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .income, isDefault: true, sortOrder: $0)
+            })
+            dataStore.seedWallets(DefaultData.defaultWallets.enumerated().map {
+                Wallet(name: $1.name, type: $1.type, icon: $1.icon, colorHex: $1.color, initialBalance: 0, isDefault: $1.isDefault, sortOrder: $0)
+            })
+        }
     }
 }

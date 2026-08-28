@@ -18,6 +18,9 @@ class DataStore: ObservableObject {
     @Published var budgets: [Budget] = []
     @Published var savingsGoals: [SavingsGoal] = []
     
+    // Simpan semua listener aktif agar bisa dimatikan saat logout
+    private var listeners: [ListenerRegistration] = []
+    
     private var db: Firestore { FirebaseManager.shared.db }
     
     // Ambil UID pengguna yang sedang login. Jika tidak ada, return nil.
@@ -41,8 +44,12 @@ class DataStore: ObservableObject {
         fetchSavingsGoals()
     }
     
-    // Hapus semua data dari layar saat pengguna logout
+    // Matikan SEMUA listener aktif dan hapus data dari layar saat logout
     func clearData() {
+        // Cabut semua listener Firestore — mencegah listener lama "menghantui" sesi baru
+        listeners.forEach { $0.remove() }
+        listeners.removeAll()
+        
         transactions = []
         categories = []
         wallets = []
@@ -53,7 +60,7 @@ class DataStore: ObservableObject {
     // MARK: - Generic Fetcher (tanpa order di Firestore — hindari composite index)
     private func fetchCollection<T: Codable>(collection: String, completion: @escaping ([T]) -> Void) {
         guard let uid = currentUserId else { return }
-        db.collection(collection)
+        let listener = db.collection(collection)
             .whereField("userId", isEqualTo: uid)
             .addSnapshotListener { snapshot, error in
                 guard let documents = snapshot?.documents else {
@@ -65,6 +72,7 @@ class DataStore: ObservableObject {
                 }
                 completion(items)
             }
+        listeners.append(listener)
     }
     
     // MARK: - Fetchers (sorting dilakukan di sisi client)
@@ -82,7 +90,7 @@ class DataStore: ObservableObject {
     
     private func fetchTransactions() {
         guard let uid = currentUserId else { return }
-        db.collection("transactions")
+        let listener = db.collection("transactions")
             .whereField("userId", isEqualTo: uid)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let documents = snapshot?.documents else { return }
@@ -92,6 +100,7 @@ class DataStore: ObservableObject {
                 self?.transactions = items
                 self?.recalculateBudgets(transactions: items)
             }
+        listeners.append(listener)
     }
     
     private func fetchBudgets() {
