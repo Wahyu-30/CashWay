@@ -161,7 +161,7 @@ struct ReportsView: View {
         fmt.dateFormat = "MMM"
         var result: [(month: String, amount: Double)] = []
         for i in stride(from: 11, through: 0, by: -1) {
-            var comps = DateComponents(year: selectedYear, month: selectedMonth - i)
+            let comps = DateComponents(year: selectedYear, month: selectedMonth - i)
             let date  = cal.date(from: comps) ?? Date()
             let m = cal.component(.month, from: date)
             let y = cal.component(.year,  from: date)
