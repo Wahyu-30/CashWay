@@ -254,6 +254,8 @@ struct DashboardView: View {
                 )
             }
         }
+    }
+    
     // MARK: - Expiration Banner
     @ViewBuilder
     private func expirationBanner(days: Int) -> some View {
