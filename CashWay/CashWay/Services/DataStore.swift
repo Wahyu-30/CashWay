@@ -195,30 +195,37 @@ class DataStore: ObservableObject {
         }
     }
 
-    // MARK: - Deduplication
-    // Hapus otomatis semua kategori & wallet yang duplikat (nama sama),
-    // simpan hanya 1 per nama unik.
+    // MARK: - Deduplication + Restore
+    // 1. Hapus semua duplikat kategori & wallet (nama sama = duplikat)
+    // 2. Hapus dokumen lama yang tidak punya field userId (ghost data)
+    // 3. Kembalikan default wallet yang hilang
     func cleanupDuplicates(completion: @escaping (Int) -> Void) {
         guard let uid = currentUserId else { completion(0); return }
-        var totalDeleted = 0
         let group = DispatchGroup()
+        var totalDeleted = 0
 
         // --- Deduplikasi Kategori ---
         group.enter()
         db.collection("categories")
-            .whereField("userId", isEqualTo: uid)
-            .getDocuments { snapshot, _ in
+            .getDocuments { [weak self] snapshot, _ in
                 guard let docs = snapshot?.documents else { group.leave(); return }
-
-                // Group by name, keep first, delete rest
                 var seen: [String: Bool] = [:]
                 for doc in docs {
-                    let name = doc.data()["name"] as? String ?? doc.documentID
-                    if seen[name] == nil {
-                        seen[name] = true  // simpan yang pertama
-                    } else {
-                        doc.reference.delete()  // hapus duplikat
+                    let docUserId = doc.data()["userId"] as? String ?? ""
+                    let name      = doc.data()["name"] as? String ?? doc.documentID
+
+                    // Hapus ghost document (tidak punya userId atau beda user)
+                    if docUserId != uid {
+                        doc.reference.delete()
                         totalDeleted += 1
+                        continue
+                    }
+                    // Hapus duplikat (nama sama sudah pernah disimpan)
+                    if seen[name] != nil {
+                        doc.reference.delete()
+                        totalDeleted += 1
+                    } else {
+                        seen[name] = true
                     }
                 }
                 group.leave()
@@ -227,19 +234,37 @@ class DataStore: ObservableObject {
         // --- Deduplikasi Wallet ---
         group.enter()
         db.collection("wallets")
-            .whereField("userId", isEqualTo: uid)
-            .getDocuments { snapshot, _ in
-                guard let docs = snapshot?.documents else { group.leave(); return }
-
+            .getDocuments { [weak self] snapshot, _ in
+                guard let self, let docs = snapshot?.documents else { group.leave(); return }
                 var seen: [String: Bool] = [:]
+                var keptNames: Set<String> = []
+
                 for doc in docs {
-                    let name = doc.data()["name"] as? String ?? doc.documentID
-                    if seen[name] == nil {
-                        seen[name] = true
-                    } else {
+                    let docUserId = doc.data()["userId"] as? String ?? ""
+                    let name      = doc.data()["name"] as? String ?? doc.documentID
+
+                    if docUserId != uid {
                         doc.reference.delete()
                         totalDeleted += 1
+                        continue
                     }
+                    if seen[name] != nil {
+                        doc.reference.delete()
+                        totalDeleted += 1
+                    } else {
+                        seen[name] = true
+                        keptNames.insert(name)
+                    }
+                }
+
+                // Kembalikan default wallet yang hilang
+                let defaults = DefaultData.defaultWallets
+                for (idx, def) in defaults.enumerated() where !keptNames.contains(def.name) {
+                    var w = Wallet(name: def.name, type: def.type, icon: def.icon,
+                                   colorHex: def.color, initialBalance: 0,
+                                   isDefault: def.isDefault, sortOrder: idx)
+                    w.userId = uid
+                    self.saveDocument(collection: "wallets", id: w.id, data: w)
                 }
                 group.leave()
             }
