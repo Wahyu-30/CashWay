@@ -207,7 +207,7 @@ class DataStore: ObservableObject {
         // --- Deduplikasi Kategori ---
         group.enter()
         db.collection("categories")
-            .getDocuments { [weak self] snapshot, _ in
+            .getDocuments { snapshot, _ in
                 guard let docs = snapshot?.documents else { group.leave(); return }
                 var seen: [String: Bool] = [:]
                 for doc in docs {
