@@ -15,7 +15,10 @@ struct SettingsView: View {
     @AppStorage("notif_monthly_enabled") private var monthlyEnabled = false
 
     @State private var salaryText: String = ""
-    @State private var showDeleteAlert = false
+    @State private var showDeleteAlert   = false
+    @State private var showCleanupAlert  = false
+    @State private var cleanupResult     = ""
+    @State private var isCleaningUp      = false
     @EnvironmentObject private var dataStore: DataStore
     @EnvironmentObject private var authManager: AuthManager
     @StateObject private var notifManager = NotificationManager.shared
@@ -52,6 +55,11 @@ struct SettingsView: View {
             Button("Batal", role: .cancel) {}
         } message: {
             Text("Semua transaksi, budget, dan wallet akan dihapus permanen.")
+        }
+        .alert("Bersihkan Duplikat", isPresented: $showCleanupAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(cleanupResult)
         }
     }
 
@@ -243,6 +251,29 @@ struct SettingsView: View {
 
     private var dangerSection: some View {
         Section("Zona Bahaya") {
+            // --- Tombol Bersihkan Duplikat ---
+            Button {
+                isCleaningUp = true
+                dataStore.cleanupDuplicates { count in
+                    isCleaningUp = false
+                    cleanupResult = count > 0
+                        ? "Berhasil menghapus \(count) data duplikat. Tampilan sudah rapi! ✅"
+                        : "Tidak ditemukan data duplikat. Semua data sudah bersih! ✅"
+                    showCleanupAlert = true
+                }
+            } label: {
+                HStack {
+                    if isCleaningUp {
+                        ProgressView().scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(Color.cwAccent)
+                    }
+                    Text(isCleaningUp ? "Membersihkan..." : "Bersihkan Data Duplikat")
+                        .foregroundStyle(Color.cwTextPrimary)
+                }
+            }
+            .disabled(isCleaningUp)
+
             Button {
                 dataStore.clearData()
                 authManager.signOut()

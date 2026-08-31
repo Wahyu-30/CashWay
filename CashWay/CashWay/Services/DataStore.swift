@@ -194,4 +194,58 @@ class DataStore: ObservableObject {
             saveDocument(collection: "wallets", id: stamped.id, data: stamped)
         }
     }
+
+    // MARK: - Deduplication
+    // Hapus otomatis semua kategori & wallet yang duplikat (nama sama),
+    // simpan hanya 1 per nama unik.
+    func cleanupDuplicates(completion: @escaping (Int) -> Void) {
+        guard let uid = currentUserId else { completion(0); return }
+        var totalDeleted = 0
+        let group = DispatchGroup()
+
+        // --- Deduplikasi Kategori ---
+        group.enter()
+        db.collection("categories")
+            .whereField("userId", isEqualTo: uid)
+            .getDocuments { snapshot, _ in
+                guard let docs = snapshot?.documents else { group.leave(); return }
+
+                // Group by name, keep first, delete rest
+                var seen: [String: Bool] = [:]
+                for doc in docs {
+                    let name = doc.data()["name"] as? String ?? doc.documentID
+                    if seen[name] == nil {
+                        seen[name] = true  // simpan yang pertama
+                    } else {
+                        doc.reference.delete()  // hapus duplikat
+                        totalDeleted += 1
+                    }
+                }
+                group.leave()
+            }
+
+        // --- Deduplikasi Wallet ---
+        group.enter()
+        db.collection("wallets")
+            .whereField("userId", isEqualTo: uid)
+            .getDocuments { snapshot, _ in
+                guard let docs = snapshot?.documents else { group.leave(); return }
+
+                var seen: [String: Bool] = [:]
+                for doc in docs {
+                    let name = doc.data()["name"] as? String ?? doc.documentID
+                    if seen[name] == nil {
+                        seen[name] = true
+                    } else {
+                        doc.reference.delete()
+                        totalDeleted += 1
+                    }
+                }
+                group.leave()
+            }
+
+        group.notify(queue: .main) {
+            completion(totalDeleted)
+        }
+    }
 }
