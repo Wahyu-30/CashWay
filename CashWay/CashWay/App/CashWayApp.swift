@@ -1,6 +1,7 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseAuth
+import FirebaseFirestore
 import GoogleSignIn
 
 // ============================================================
@@ -110,33 +111,33 @@ struct CashWayApp: App {
     // Seed data default hanya sekali per akun Google
     // Mengecek Firestore terlebih dahulu agar tidak duplikat lintas perangkat
     private func seedIfNeeded(dataStore: DataStore) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+        Task {
+            // Tunggu 2 detik agar auth state stabil
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             guard let uid = Auth.auth().currentUser?.uid else { return }
             let db = FirebaseManager.shared.db
 
             // Cek apakah sudah ada kategori untuk user ini di Firestore
-            db.collection("categories")
+            let snapshot = try? await db.collection("categories")
                 .whereField("userId", isEqualTo: uid)
                 .limit(to: 1)
-                .getDocuments { snapshot, error in
-                    guard error == nil else { return }
-                    
-                    // Jika sudah ada minimal 1 kategori → data sudah pernah di-seed → lewati
-                    if let snapshot = snapshot, !snapshot.isEmpty {
-                        return
-                    }
-                    
-                    // Belum ada data → lakukan seeding
-                    dataStore.seedCategories(DefaultData.expenseCategories.enumerated().map {
-                        Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .expense, isDefault: true, sortOrder: $0)
-                    })
-                    dataStore.seedCategories(DefaultData.incomeCategories.enumerated().map {
-                        Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .income, isDefault: true, sortOrder: $0)
-                    })
-                    dataStore.seedWallets(DefaultData.defaultWallets.enumerated().map {
-                        Wallet(name: $1.name, type: $1.type, icon: $1.icon, colorHex: $1.color, initialBalance: 0, isDefault: $1.isDefault, sortOrder: $0)
-                    })
-                }
+                .getDocuments()
+
+            // Jika sudah ada minimal 1 kategori → data sudah pernah di-seed → lewati
+            if let snapshot = snapshot, !snapshot.isEmpty { return }
+
+            // Belum ada data → lakukan seeding di MainActor
+            await MainActor.run {
+                dataStore.seedCategories(DefaultData.expenseCategories.enumerated().map {
+                    Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .expense, isDefault: true, sortOrder: $0)
+                })
+                dataStore.seedCategories(DefaultData.incomeCategories.enumerated().map {
+                    Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .income, isDefault: true, sortOrder: $0)
+                })
+                dataStore.seedWallets(DefaultData.defaultWallets.enumerated().map {
+                    Wallet(name: $1.name, type: $1.type, icon: $1.icon, colorHex: $1.color, initialBalance: 0, isDefault: $1.isDefault, sortOrder: $0)
+                })
+            }
         }
     }
 }
