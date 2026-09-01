@@ -1,8 +1,12 @@
 # CashWay — Panduan Implementasi untuk AI
 
-## Status proyek saat ini
+**Update terakhir:** 1 September 2026
 
-CashWay adalah aplikasi pelacak keuangan pribadi multiplatform untuk macOS dan iOS. Implementasi yang sedang berjalan **bukan lagi SwiftData/offline-only**: aplikasi memakai Firebase Authentication (Google Sign-In) dan Cloud Firestore untuk autentikasi serta sinkronisasi data realtime.
+---
+
+## Status Proyek Saat Ini
+
+CashWay adalah aplikasi pelacak keuangan pribadi multiplatform untuk macOS dan iOS. Implementasi yang sedang berjalan **bukan SwiftData/offline-only**: aplikasi memakai Firebase Authentication (Google Sign-In) dan Cloud Firestore untuk autentikasi serta sinkronisasi data realtime.
 
 | Aspek | Standar saat ini |
 |---|---|
@@ -17,7 +21,9 @@ CashWay adalah aplikasi pelacak keuangan pribadi multiplatform untuk macOS dan i
 
 Jangan mengembalikan proyek ke SwiftData, CloudKit, atau offline-only tanpa instruksi eksplisit pengguna.
 
-## Struktur proyek
+---
+
+## Struktur Proyek
 
 ```
 CASHWAY/
@@ -29,17 +35,19 @@ CASHWAY/
 └── CashWay/
     ├── CashWay.xcodeproj/
     └── CashWay/
-        ├── App/           # Entry point dan navigasi
+        ├── App/           # Entry point: CashWayApp.swift (seedIfNeeded async/await)
         ├── Models/        # DTO Firestore: Transaction, Category, Wallet, Budget, SavingsGoal
-        ├── Services/      # Firebase, Auth, DataStore, notifikasi, PDF
-        ├── Utilities/     # warna, format IDR, data default, animasi, smart advice
-        ├── ViewModels/    # state dan logika layar
-        └── Views/         # seluruh layar SwiftUI
+        ├── Services/      # DataStore, AuthService, NotificationManager, PDFExporter
+        ├── Utilities/     # ColorExtensions, CurrencyFormatter, DefaultData, SlideInCard, SmartAdvice
+        ├── ViewModels/    # DashboardViewModel, TransactionViewModel, dll
+        └── Views/         # Semua layar SwiftUI
 ```
 
-## Arsitektur data
+---
 
-`DataStore` adalah sumber data utama UI dan harus digunakan melalui `@EnvironmentObject`. Ia memasang Firestore snapshot listener untuk koleksi berikut:
+## Arsitektur Data
+
+`DataStore` (`@MainActor ObservableObject`) adalah sumber data utama UI. Ia memasang Firestore snapshot listener untuk koleksi:
 
 - `transactions`
 - `categories`
@@ -47,54 +55,148 @@ CASHWAY/
 - `budgets`
 - `savingsGoals`
 
-Setiap dokumen milik pengguna wajib memiliki `userId`, dan setiap read/write harus dibatasi pada UID Firebase Auth yang sedang aktif. Jangan pernah melakukan query atau delete lintas akun. Logout harus menghentikan listener lalu mengosongkan state lokal.
+Setiap dokumen wajib memiliki field `userId`. Setiap read/write dibatasi pada UID Firebase Auth aktif. Logout harus memanggil `clearData()` untuk hentikan listener dan kosongkan state lokal.
 
-### Model Firestore
+---
 
-- Semua model yang diserialisasi Firestore menggunakan `Codable`.
-- Karena target memakai default `MainActor`, model DTO (`Wallet`, `Category`, `Transaction`, `Budget`, dan `SavingsGoal`) harus tetap `nonisolated`. Ini memungkinkan Firestore melakukan encode/decode di luar UI actor.
+## Model Firestore
+
+- Semua model menggunakan `Codable` + `nonisolated struct`.
 - Uang menggunakan `Decimal`, bukan `Double` atau `Float`.
 - Gunakan `CurrencyFormatter` untuk menampilkan Rupiah.
-- Transaksi menyimpan snapshot kategori dan wallet agar query Firestore sederhana dan data historis tetap dapat ditampilkan.
 
-## Aturan concurrency
+### Budget — Mendukung Group Budget
 
-- `DataStore`, `NotificationManager`, `PDFExporter`, dan view model UI berjalan di `@MainActor`.
-- Callback atau API async Firestore tidak boleh langsung memanggil API UI/MainActor dari konteks nonisolated. Gunakan fungsi `async`/`await` atau kembali ke `MainActor` secara eksplisit.
-- Untuk helper Firestore, batas generic harus sempit: `Decodable` saat membaca dan `Encodable` saat menulis.
-- Jangan menghapus `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` hanya untuk menyembunyikan warning. Perbaiki batas actor pada tipe atau callback yang benar.
+```swift
+nonisolated struct Budget: Identifiable, Codable, Equatable, Hashable {
+    var id: String
+    var userId: String
+    var amount: Decimal
+    var month: Int
+    var year: Int
+    var category: Category?          // Kategori utama (icon & warna untuk display)
+    var groupName: String?           // Nama group, mis: "Kebutuhan Pokok (50%)"
+    var extraCategoryIds: [String]   // ID kategori tambahan
+    var spent: Decimal = 0           // Virtual — dihitung di runtime
 
-## Pencegahan dan pembersihan duplikat
+    // Semua ID kategori yang dicakup budget ini
+    var allCategoryIds: [String] { ... }
+}
+```
 
-Data default (kategori dan wallet) memakai ID Firestore deterministik yang mencakup UID pengguna. Dengan demikian beberapa proses seeding untuk akun yang sama akan menulis dokumen yang sama, bukan membuat dokumen baru.
+**Aturan group budget:**
+- Jika `groupName != nil` → ini group budget, tampilkan icon `slider.horizontal.3`.
+- `recalculateBudgets()` menjumlahkan spent dari **semua** category ID dalam `allCategoryIds`.
+- `BudgetRowView` menampilkan `groupName` sebagai judul + daftar nama kategori sebagai subtitle.
+- Field `groupName` dan `extraCategoryIds` punya default `nil`/`[]` → backward compatible dengan budget lama.
 
-Tombol **Bersihkan Data Duplikat** di Settings memanggil `DataStore.cleanupDuplicates()`:
+---
 
-- hanya membaca dan mengubah dokumen dengan `userId` pengguna aktif;
-- kategori dianggap sama hanya jika `name` **dan** `type` sama; kategori `Lainnya` income dan expense harus tetap terpisah;
-- wallet dianggap sama jika `name` sama;
-- tidak boleh menghapus dokumen pengguna lain atau dokumen lama tanpa `userId`;
-- gunakan batch Firestore dan jangan mengirim write kosong.
+## Auto-Budget Wizard (50/30/20)
 
-Jangan membuat proses cleanup otomatis yang menghapus data tanpa aksi pengguna. Jangan mengubah struktur, rules, atau data Firestore yang sudah ada kecuali pengguna memberi izin jelas.
+Wizard membuat **2 group budget**, bukan 8+ per-kategori:
 
-## Aturan UI dan fitur
+| Group | % | Kategori |
+|---|---|---|
+| Kebutuhan Pokok | 50% | Makan & Minum, Transportasi, Kesehatan, Rumah & Tagihan, Pendidikan |
+| Keinginan | 30% | Hiburan, Belanja, Langganan Digital, Perjalanan, Perlengkapan Kerja |
+| Tabungan | 20% | Tidak dibuat sebagai budget (hanya info) |
 
-- UI tetap SwiftUI lintas iOS/macOS; gunakan `#if os(iOS)` / `#if os(macOS)` bila diperlukan.
-- Warna melalui `Color.cw…` dan sistem desain di `ColorExtensions.swift`.
-- Dashboard, transaksi, tabungan, budget, laporan, smart advice, settings, Google login, notifikasi lokal, dan ekspor PDF sudah diimplementasikan.
-- Smart Advice adalah rule-based, bukan layanan AI eksternal.
-- Gunakan komponen dan animasi yang ada; pertahankan dark premium design saat menambah UI.
-- Jangan menambah dependensi pihak ketiga tanpa persetujuan. Firebase dan Google Sign-In adalah dependensi yang sudah disetujui.
+Wizard **menghapus semua budget lama** bulan tersebut dulu, baru buat 2 group budget baru.
 
-## Cara kerja aman
+---
 
-1. Baca file terkait dan cek perubahan kerja yang sudah ada sebelum mengedit.
-2. Buat perubahan sekecil mungkin yang menyelesaikan masalah.
-3. Jangan menggunakan `git reset`, `checkout --`, atau operasi database destruktif.
-4. Build macOS dan, bila relevan, iOS setelah perubahan. Bedakan error compiler aplikasi dari warning lingkungan Xcode/Simulator.
-5. Laporkan file yang diubah, hasil build, dan batasan yang belum dapat diverifikasi.
+## Dashboard — Saldo Kumulatif
 
-## Catatan dokumentasi
+`DashboardViewModel` memiliki dua properti saldo:
 
-`README.md`, `PRD.md`, `DESIGN.md`, dan `ROADMAP.md` memuat sebagian informasi historis dari fase SwiftData/offline-first. Untuk keputusan implementasi yang berhubungan dengan kode saat ini, gunakan arsitektur Firebase yang dijelaskan dalam dokumen ini dan validasi terhadap source code aktual.
+| Properti | Definisi | Digunakan di |
+|---|---|---|
+| `netBalance` | income - expense bulan ini | (internal, tidak ditampilkan utama) |
+| `cumulativeBalance` | Sum semua transaksi dari awal s.d. akhir bulan terpilih | Kartu utama "Total Saldo" |
+
+Saldo otomatis terbawa antar bulan — tidak perlu input ulang. Badge Masuk/Keluar tetap menampilkan angka bulan berjalan.
+
+---
+
+## Halaman Transaksi — Filter Bulan
+
+`TransactionListView` default menampilkan bulan saat ini:
+- Navigasi `< Agustus 2026 >` di atas daftar.
+- Tombol "Semua Bulan" / "Bulan Ini" untuk toggle.
+- **iOS**: swipe kiri → hapus (konfirmasi alert), swipe kanan → edit.
+- **Mac**: klik kanan → menu "Edit Transaksi" / "Hapus Transaksi".
+
+---
+
+## Hapus Budget
+
+- `BudgetRowView(budget:, allCategories:, onDelete:)` — parameter `onDelete` opsional.
+- Jika `onDelete != nil`, ikon 🗑 merah ditampilkan di kartu.
+- Penghapusan selalu melalui konfirmasi alert di `BudgetView`.
+- Mac: klik kanan → "Hapus" juga lewat konfirmasi yang sama.
+
+---
+
+## Pencegahan dan Pembersihan Duplikat
+
+Seeding di `CashWayApp.swift` menggunakan `async/await` + `MainActor.run`:
+1. Cek Firestore (`categories` collection, limit 1).
+2. Jika kosong → `seedCategories()` + `seedWallets()`.
+3. ID deterministik per-user → seed ulang tidak buat duplikat.
+
+Tombol **"Bersihkan Data Duplikat"** di Settings → `DataStore.cleanupDuplicates()`:
+- Async, batch Firestore commit.
+- Duplikat kategori: sama `name` + `type`.
+- Duplikat wallet: sama `name`.
+
+---
+
+## Sertifikat Sideload (iOS)
+
+Banner peringatan **hanya** tampil saat `daysUntilExpiration <= 1`:
+
+```swift
+if let days = vm.daysUntilExpiration, days <= 1 {
+    SlideInCard(index: 1) { expirationBanner(days: days) }
+}
+```
+
+Jangan ubah kondisi ini menjadi lebih longgar — banner tidak boleh muncul setiap hari.
+
+---
+
+## Aturan Concurrency Swift 6
+
+- `DataStore`, view model, `NotificationManager`, `PDFExporter` → `@MainActor`.
+- Callback Firestore yang async harus balik ke `MainActor` via `await MainActor.run { }`.
+- Model DTO harus `nonisolated` agar bisa di-encode/decode Firestore di luar MainActor.
+- Jangan hapus `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` untuk sembunyikan warning.
+
+---
+
+## Firestore Query
+
+- **Hanya** gunakan `.whereField("userId", isEqualTo: uid)` — tidak ada composite index.
+- Sort dilakukan client-side.
+- Jangan buat Firestore index baru tanpa kebutuhan jelas.
+
+---
+
+## Aturan UI
+
+- Semua teks UI dalam **Bahasa Indonesia**.
+- Warna via `Color.cw…` (ColorExtensions.swift).
+- `#if os(iOS)` / `#if os(macOS)` untuk perbedaan platform.
+- Pertahankan dark premium design; gunakan komponen existing (`SlideInCard`, `AnimatedNumberText`, dll).
+- Jangan tambah dependensi pihak ketiga tanpa persetujuan. Firebase + Google Sign-In sudah disetujui.
+
+---
+
+## Cara Kerja Aman
+
+1. Baca file terkait sebelum edit.
+2. Buat perubahan sekecil mungkin.
+3. Jangan gunakan `git reset`, `checkout --`, atau operasi destruktif database.
+4. Build setelah perubahan; bedakan error compiler dari warning Xcode.
+5. Laporkan file yang diubah dan hasil build.

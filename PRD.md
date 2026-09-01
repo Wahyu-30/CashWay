@@ -1,66 +1,68 @@
 # 📋 Product Requirements Document (PRD)
 # CashWay — Personal Finance Tracker
 
-**Versi:** 1.0  
-**Tanggal:** Agustus 2026  
-**Author:** Wahyu Ahmad Cahyadi  
-**Platform:** macOS 26 + iOS 26  
+**Versi:** 1.0 (Production)
+**Update Terakhir:** 1 September 2026
+**Author:** Wahyu Ahmad Cahyadi
+**Platform:** macOS 26 + iOS 26
+**Backend:** Firebase Firestore + Firebase Auth (Google Sign-In)
 
 ---
 
 ## 1. Latar Belakang & Tujuan
 
 ### Problem Statement
-Sebagai videografer dan editor freelance/kantoran, penghasilan bersifat variabel (project-based, gaji tetap + bonus, dll). Sulit memantau arus kas masuk dan keluar secara real-time tanpa tools yang tepat. Aplikasi keuangan yang ada di pasaran:
-- Memerlukan langganan berbayar
-- Menyimpan data di cloud pihak ketiga
-- Tidak bisa offline sepenuhnya
-- Terlalu kompleks / tidak intuitif
+Sebagai videografer dan editor freelance/kantoran, penghasilan bersifat variabel (project-based, gaji tetap + bonus, dll). Sulit memantau arus kas masuk dan keluar secara real-time tanpa tools yang tepat.
 
 ### Tujuan Produk
-Membangun aplikasi **offline-first** yang memungkinkan pengguna:
+Membangun aplikasi keuangan pribadi yang memungkinkan pengguna:
 1. Mencatat setiap transaksi keuangan dengan cepat (< 10 detik)
 2. Melihat ringkasan keuangan secara visual dan jelas
 3. Mengontrol pengeluaran melalui sistem budget
-4. Mengakses data yang sama di MacBook dan iPhone
+4. Mengakses data yang sama di MacBook dan iPhone secara real-time (Firebase Sync)
 
 ---
 
 ## 2. Target Pengguna
 
-**Persona:** Wahyu — Videografer & Editor  
+**Persona:** Wahyu — Videografer & Editor
 - Usia: 25-35 tahun
 - Profesi: Kreatif, bekerja di kantor + freelance
 - Penghasilan: Campuran (gaji tetap + project)
-- Perangkat: MacBook + iPhone 13
+- Perangkat: MacBook + iPhone
 - Kebutuhan: Pantau pengeluaran harian, budget bulanan, laporan sederhana
-- Pain point: Tidak ingin data keuangan tersimpan di cloud orang lain
+- Data disimpan di Firebase Cloud (private per akun Google)
 
 ---
 
 ## 3. Ruang Lingkup (Scope)
 
-### In Scope (Versi 1.0)
-- ✅ CRUD transaksi (income & expense)
-- ✅ Kategori preset + custom
+### In Scope (Versi 1.0 — Sudah Selesai)
+- ✅ CRUD transaksi (income & expense) dengan konfirmasi hapus
+- ✅ Filter transaksi per bulan (navigasi < Bulan Tahun >)
+- ✅ Kategori preset (14 expense + 6 income)
 - ✅ Multi-wallet (Tunai, Bank, GoPay, OVO, dll)
-- ✅ Dashboard dengan chart bulanan
-- ✅ Budget per kategori per bulan
-- ✅ Notifikasi budget (in-app)
-- ✅ Notifikasi pengingat lokal (harian 20:00 & awal bulan 09:00, jam bisa diubah)
-- ✅ Filter & pencarian riwayat transaksi
-- ✅ Export PDF laporan bulanan
+- ✅ Dashboard dengan "Total Saldo" kumulatif (terbawa antar bulan)
+- ✅ Chart Pemasukan vs Pengeluaran per hari
+- ✅ Sumber Pemasukan (Gaji, Freelance, Orang Tua, Lainnya)
+- ✅ Budget Group per bulan (Auto-Budget Wizard 50/30/20)
+- ✅ Hapus budget dengan konfirmasi
+- ✅ Smart Advice (rule-based, bukan AI eksternal)
+- ✅ Laporan bulanan + export PDF
+- ✅ Notifikasi pengingat lokal (harian & awal bulan)
 - ✅ Dark mode (default)
-- ✅ iCloud sync antar perangkat (opsional, via toggle)
+- ✅ Cloud sync realtime (Firebase Firestore)
 - ✅ Isolasi data per akun Google (userId scoping)
-- ✅ Login/Logout multi-akun Google
+- ✅ Login/Logout Google Sign-In (macOS & iOS)
 
 ### Out of Scope (Versi 1.0)
+- ❌ Kategori custom (tambah/edit kategori sendiri) → v1.1
 - ❌ Import otomatis dari rekening bank (API banking)
 - ❌ Investasi / portfolio tracker
 - ❌ Multi-currency
 - ❌ Sharing/collaboration dengan orang lain
 - ❌ App Store distribution
+- ❌ iOS Widget
 
 ---
 
@@ -68,153 +70,162 @@ Membangun aplikasi **offline-first** yang memungkinkan pengguna:
 
 ### 4.1 Transaksi
 
-| ID | Story | Priority |
-|----|-------|----------|
-| T-01 | Sebagai user, saya ingin menambah transaksi pengeluaran dengan memilih kategori, memasukkan jumlah (Rupiah), tanggal, dan catatan | 🔴 High |
-| T-02 | Sebagai user, saya ingin menambah transaksi pemasukan dengan sumber (gaji, freelance, dll) | 🔴 High |
-| T-03 | Sebagai user, saya ingin mengedit transaksi yang sudah dicatat | 🔴 High |
-| T-04 | Sebagai user, saya ingin menghapus transaksi dengan konfirmasi | 🔴 High |
-| T-05 | Sebagai user, saya ingin mencari transaksi berdasarkan kata kunci atau filter kategori/tanggal | 🟡 Medium |
-| T-06 | Sebagai user, saya ingin melihat detail transaksi lengkap | 🟡 Medium |
+| ID | Story | Status |
+|----|-------|--------|
+| T-01 | Tambah transaksi pengeluaran (kategori, jumlah, tanggal, catatan) | ✅ Done |
+| T-02 | Tambah transaksi pemasukan (sumber: gaji, freelance, orang tua, dll) | ✅ Done |
+| T-03 | Edit transaksi yang sudah dicatat | ✅ Done |
+| T-04 | Hapus transaksi dengan konfirmasi (iOS swipe kiri / Mac klik kanan) | ✅ Done |
+| T-05 | Filter transaksi per bulan (default bulan ini, bisa navigasi ke bulan lain) | ✅ Done |
+| T-06 | Lihat semua riwayat transaksi (tombol "Semua Bulan") | ✅ Done |
+| T-07 | Cari transaksi berdasarkan kata kunci atau filter tipe | ✅ Done |
 
 ### 4.2 Dashboard
 
-| ID | Story | Priority |
-|----|-------|----------|
-| D-01 | Sebagai user, saya ingin melihat saldo total semua wallet di dashboard | 🔴 High |
-| D-02 | Sebagai user, saya ingin melihat total pemasukan dan pengeluaran bulan ini | 🔴 High |
-| D-03 | Sebagai user, saya ingin melihat grafik batang pengeluaran per hari dalam sebulan | 🟡 Medium |
-| D-04 | Sebagai user, saya ingin melihat pie chart distribusi pengeluaran per kategori | 🟡 Medium |
-| D-05 | Sebagai user, saya ingin melihat 5 transaksi terakhir di dashboard | 🟡 Medium |
+| ID | Story | Status |
+|----|-------|--------|
+| D-01 | Lihat "Total Saldo" yang akumulatif dari semua bulan s.d. bulan ini | ✅ Done |
+| D-02 | Lihat total pemasukan dan pengeluaran bulan ini (badge Masuk/Keluar) | ✅ Done |
+| D-03 | Lihat grafik bar pemasukan vs pengeluaran per hari | ✅ Done |
+| D-04 | Lihat sumber pemasukan (Gaji, Freelance, Orang Tua) | ✅ Done |
+| D-05 | Lihat 5 transaksi terakhir di dashboard | ✅ Done |
+| D-06 | Navigasi bulan (< Agustus 2026 >) | ✅ Done |
+| D-07 | Saldo bulan sebelumnya otomatis terbawa ke bulan baru (tanpa input ulang) | ✅ Done |
 
 ### 4.3 Budget
 
-| ID | Story | Priority |
-|----|-------|----------|
-| B-01 | Sebagai user, saya ingin menetapkan budget maksimal per kategori per bulan | 🔴 High |
-| B-02 | Sebagai user, saya ingin melihat progress penggunaan budget (progress bar) | 🔴 High |
-| B-03 | Sebagai user, saya ingin mendapat notifikasi ketika pengeluaran mencapai 80% dari budget | 🟡 Medium |
-| B-04 | Sebagai user, saya ingin budget otomatis ter-reset tiap awal bulan | 🟡 Medium |
+| ID | Story | Status |
+|----|-------|--------|
+| B-01 | Set budget group "Kebutuhan Pokok" (50%) untuk banyak kategori sekaligus | ✅ Done |
+| B-02 | Set budget group "Keinginan" (30%) untuk banyak kategori sekaligus | ✅ Done |
+| B-03 | Lihat progress pemakaian budget (progress bar + %) | ✅ Done |
+| B-04 | Warning visual saat budget hampir habis (>80%) atau terlampaui (>100%) | ✅ Done |
+| B-05 | Hapus budget dengan konfirmasi (tombol 🗑 di kartu / Mac klik kanan) | ✅ Done |
+| B-06 | Laporan terupdate otomatis setelah budget dihapus | ✅ Done |
+| B-07 | Auto-Budget Wizard: buat budget otomatis dari pemasukan bulan ini | ✅ Done |
 
-### 4.4 Wallet / Akun
+### 4.4 Wallet
 
-| ID | Story | Priority |
-|----|-------|----------|
-| W-01 | Sebagai user, saya ingin membuat beberapa wallet (Tunai, BCA, GoPay, OVO, dll) | 🔴 High |
-| W-02 | Sebagai user, saya ingin melihat saldo masing-masing wallet | 🔴 High |
-| W-03 | Sebagai user, saya ingin mencatat transfer antar wallet | 🟡 Medium |
+| ID | Story | Status |
+|----|-------|--------|
+| W-01 | Multi-wallet (Tunai, Bank, GoPay, OVO, dll) | ✅ Done |
+| W-02 | Lihat saldo masing-masing wallet (real-time dari transaksi) | ✅ Done |
+| W-03 | Add / Edit wallet | ✅ Done |
 
 ### 4.5 Laporan
 
-| ID | Story | Priority |
-|----|-------|----------|
-| R-01 | Sebagai user, saya ingin melihat ringkasan laporan per bulan | 🟡 Medium |
-| R-02 | Sebagai user, saya ingin export laporan bulanan ke PDF | 🟡 Medium |
+| ID | Story | Status |
+|----|-------|--------|
+| R-01 | Laporan ringkasan per bulan (pemasukan, pengeluaran, saldo, per kategori) | ✅ Done |
+| R-02 | Tabel Daftar Pengeluaran per Kategori (responsif di iPhone) | ✅ Done |
+| R-03 | Export laporan bulanan ke PDF | ✅ Done |
 
-### 4.6 Sinkronisasi
+### 4.6 Akun & Sync
 
-| ID | Story | Priority |
-|----|-------|----------|
-| S-01 | Sebagai user, saya ingin data saya otomatis tersinkronisasi antara MacBook dan iPhone via iCloud | 🟢 Low |
-| S-02 | Sebagai user, saya ingin bisa menonaktifkan iCloud sync | 🟢 Low |
+| ID | Story | Status |
+|----|-------|--------|
+| S-01 | Login dengan akun Google (Google Sign-In) | ✅ Done |
+| S-02 | Data tersinkronisasi realtime antara MacBook dan iPhone | ✅ Done |
+| S-03 | Data terisolasi per akun Google (tidak ada data bocor antar user) | ✅ Done |
+| S-04 | Logout dengan aman (hapus data lokal, hentikan listener) | ✅ Done |
 
 ---
 
-## 5. Persyaratan Fungsional Detail
+## 5. Model Data
 
-### 5.1 Model Data
-
-#### Transaction
+### Transaction
 ```
-- id: UUID
-- amount: Decimal          // dalam Rupiah, selalu positif
-- type: TransactionType    // .income / .expense / .transfer
-- category: Category
-- wallet: Wallet
+- id: String (UUID)
+- userId: String          // UID Firebase Auth
+- amount: Decimal
+- type: TransactionType   // .income / .expense / .transfer
+- category: Category?     // snapshot kategori
+- wallet: Wallet?         // snapshot wallet
 - date: Date
 - note: String?
-- createdAt: Date
-- updatedAt: Date
+- incomeTag: IncomeTag?   // .salary / .business / .parents / .other
 ```
 
-#### Category
+### Category
 ```
-- id: UUID
-- name: String             // "Makan", "Transport", "Gaji", dll
-- icon: String             // SF Symbol name
-- color: String            // Hex color
-- type: CategoryType       // .income / .expense / .both
-- isDefault: Bool
+- id: String
+- userId: String
+- name: String
+- icon: String            // SF Symbol name
+- colorHex: String
+- type: CategoryType      // .income / .expense
 ```
 
-#### Wallet
+### Wallet
 ```
-- id: UUID
-- name: String             // "BCA", "GoPay", "Tunai"
-- type: WalletType         // .cash / .bank / .ewallet / .creditCard
+- id: String
+- userId: String
+- name: String            // "BCA", "GoPay", "Tunai"
 - icon: String
-- color: String
+- colorHex: String
 - initialBalance: Decimal
-- currentBalance: Decimal  // computed dari transactions
 ```
 
-#### Budget
+### Budget (dengan Group Budget Support)
 ```
-- id: UUID
-- category: Category
-- amount: Decimal          // batas budget
+- id: String
+- userId: String
+- amount: Decimal          // batas budget total untuk group ini
 - month: Int
 - year: Int
-- spent: Decimal           // computed dari transactions
+- category: Category?      // kategori utama (untuk icon & warna)
+- groupName: String?       // "Kebutuhan Pokok (50%)" — jika nil, budget per-kategori biasa
+- extraCategoryIds: [String] // ID kategori tambahan dalam group
+- spent: Decimal           // virtual, dihitung dari semua transaksi dalam allCategoryIds
 ```
 
-### 5.2 Format Angka
-- Semua jumlah dalam **IDR (Rupiah)**
-- Format tampilan: `Rp 1.250.000` (titik sebagai pemisah ribuan)
-- Input: angka mentah, auto-format saat tampil
-
-### 5.3 Kategori Default (Preset)
-
-**Pengeluaran:**
-- 🍽️ Makan & Minum
-- 🚗 Transportasi
-- 🛒 Belanja
-- 💊 Kesehatan
-- 🎮 Hiburan
-- 📱 Langganan Digital
-- 🏠 Rumah & Tagihan
-- 📚 Pendidikan
-- 💼 Perlengkapan Kerja
-- 🎬 Equipment (kamera, drone, dll)
-- 💻 Software & Tools
-- ✈️ Perjalanan
-- 🎁 Hadiah
-- 🌀 Lainnya
-
-**Pemasukan:**
-- 💰 Gaji
-- 🎯 Freelance / Project
-- 📈 Investasi
-- 🎁 Hadiah / Bonus
-- 💸 Transfer Masuk
-- 🌀 Lainnya
+### SavingsGoal
+```
+- id: String
+- userId: String
+- name: String
+- targetAmount: Decimal
+- currentAmount: Decimal
+- deadline: Date?
+- icon: String
+- colorHex: String
+```
 
 ---
 
-## 6. Persyaratan Non-Fungsional
+## 6. Format Angka
+- Semua jumlah dalam **IDR (Rupiah)**
+- Format tampilan: `Rp 1.250.000` (titik sebagai pemisah ribuan)
+- Input: angka mentah, auto-format saat tampil via `CurrencyFormatter`
+
+---
+
+## 7. Kategori Default (Preset)
+
+**Pengeluaran (14):**
+Makan & Minum, Transportasi, Belanja, Kesehatan, Hiburan, Langganan Digital,
+Rumah & Tagihan, Pendidikan, Perlengkapan Kerja, Equipment, Software & Tools,
+Perjalanan, Hadiah, Lainnya
+
+**Pemasukan (6):**
+Gaji Kantor, Freelance/Project, Orang Tua, Investasi, Bonus/Hadiah, Lainnya
+
+---
+
+## 8. Persyaratan Non-Fungsional
 
 | Aspek | Persyaratan |
 |-------|-------------|
-| **Performance** | Aplikasi terbuka < 2 detik; transaksi tersimpan < 1 detik |
-| **Storage** | Maksimal 50MB untuk 10.000 transaksi |
-| **Offline** | 100% berfungsi tanpa koneksi internet |
-| **Security** | Data terenkripsi di level sistem (iOS Data Protection, macOS FileVault) |
+| **Performance** | Load dashboard < 1 detik; transaksi tersimpan < 1 detik |
+| **Sync** | Realtime sync via Firebase Firestore |
+| **Security** | Data terisolasi per userId; Firestore Security Rules |
+| **Offline** | App masih bisa dibaca saat offline (Firestore cache), write saat online |
 | **Accessibility** | Support VoiceOver, Dynamic Type |
-| **Localization** | Bahasa Indonesia (default), Bahasa Inggris |
+| **Localization** | Bahasa Indonesia |
 
 ---
 
-## 7. Design Requirements
+## 9. Design Requirements
 
 ### Visual Identity
 - **Nama:** CashWay
@@ -224,44 +235,26 @@ Membangun aplikasi **offline-first** yang memungkinkan pengguna:
 ### Color Palette
 | Token | Hex | Penggunaan |
 |-------|-----|------------|
-| `background` | `#0F0F14` | Background utama |
-| `surface` | `#1A1A2E` | Card, Sheet |
-| `surface-elevated` | `#242438` | Elevated card |
-| `accent` | `#00C9A7` | Primary action, active state |
-| `income` | `#4CAF82` | Angka pemasukan |
-| `expense` | `#FF6B6B` | Angka pengeluaran |
-| `text-primary` | `#FFFFFF` | Teks utama |
-| `text-secondary` | `#8B8FA8` | Label, subtitle |
-| `border` | `#2A2A3E` | Border card |
-
-### Typography (SF Pro)
-- **Heading XL:** SF Pro Display Bold, 34pt
-- **Heading L:** SF Pro Display Bold, 28pt
-- **Heading M:** SF Pro Display Semibold, 22pt
-- **Body:** SF Pro Text Regular, 16pt
-- **Caption:** SF Pro Text Regular, 13pt
-- **Amount:** SF Pro Rounded Bold (untuk angka uang)
+| `cwBackground` | `#0F0F14` | Background utama |
+| `cwSurface` | `#1A1A2E` | Card, Sheet |
+| `cwAccent` | `#00C9A7` | Primary action, active state |
+| `cwIncome` | `#4CAF82` | Angka pemasukan |
+| `cwExpense` | `#FF6B6B` | Angka pengeluaran |
+| `cwWarning` | `#F4A261` | Budget hampir habis |
+| `cwTextPrimary` | `#FFFFFF` | Teks utama |
+| `cwTextSecondary` | `#8B8FA8` | Label, subtitle |
+| `cwBorder` | `#2A2A3E` | Border card |
 
 ---
 
-## 8. Success Metrics (KPI)
-
-| Metrik | Target |
-|--------|--------|
-| Input transaksi | < 10 detik per entri |
-| Crash rate | 0% (personal app) |
-| Waktu load dashboard | < 1 detik |
-| Akurasi data | 100% offline reliability |
-
----
-
-## 9. Risiko & Mitigasi
+## 10. Risiko & Mitigasi
 
 | Risiko | Dampak | Mitigasi |
 |--------|--------|----------|
-| Kehilangan data | Tinggi | iCloud backup + manual export JSON |
-| iPhone storage penuh (2.79 GB tersisa) | Sedang | Optimize SwiftData storage, max ~50MB |
-| Xcode update breaking changes | Rendah | Lock ke Xcode 26.6 selama development |
+| Firebase outage | Sedang | Firestore offline cache masih berfungsi |
+| Sertifikat sideload kedaluarsa (7 hari) | Tinggi | Banner peringatan hari ke-6/7; rebuild dari Xcode |
+| Duplikat data saat install ulang | Sedang | ID deterministik per-user + tombol cleanup |
+| Data terhapus tidak sengaja | Tinggi | Konfirmasi alert sebelum setiap penghapusan |
 
 ---
 

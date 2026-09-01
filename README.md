@@ -1,19 +1,20 @@
 # 💸 CashWay
 
-> Aplikasi pemantau keuangan pribadi yang berjalan offline di MacBook & iPhone kamu.
+> Aplikasi pemantau keuangan pribadi realtime di MacBook & iPhone kamu.
 
 ![Platform](https://img.shields.io/badge/Platform-macOS%2026%20%7C%20iOS%2026-black?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-6.3-orange?style=flat-square&logo=swift)
-![Xcode](https://img.shields.io/badge/Xcode-26.6-blue?style=flat-square)
+![Firebase](https://img.shields.io/badge/Backend-Firebase%20Firestore-yellow?style=flat-square&logo=firebase)
+![Xcode](https://img.shields.io/badge/Xcode-26-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-Personal-green?style=flat-square)
 
 ---
 
 ## ✨ Tentang CashWay
 
-**CashWay** adalah aplikasi keuangan pribadi yang dirancang untuk individu yang ingin memantau arus kas mereka secara mandiri, tanpa langganan, tanpa cloud pihak ketiga, dan tanpa internet. Semua data tersimpan aman di perangkatmu sendiri.
+**CashWay** adalah aplikasi keuangan pribadi yang dirancang untuk individu yang ingin memantau arus kas mereka secara mandiri. Data tersimpan aman di Firebase Cloud milik kamu sendiri dan tersinkronisasi realtime antara MacBook dan iPhone.
 
-Dibuat dengan **SwiftUI + SwiftData** — teknologi terbaru Apple yang memungkinkan satu codebase berjalan mulus di MacBook dan iPhone secara bersamaan.
+Dibuat dengan **SwiftUI + Firebase Firestore** — satu codebase berjalan mulus di MacBook dan iPhone secara bersamaan, dengan Google Sign-In sebagai autentikasi.
 
 ---
 
@@ -21,14 +22,16 @@ Dibuat dengan **SwiftUI + SwiftData** — teknologi terbaru Apple yang memungkin
 
 | Fitur | Deskripsi |
 |-------|-----------|
-| 💰 Catat Transaksi | Input pemasukan & pengeluaran dengan cepat |
-| 🏷️ Kategori | Preset + custom kategori sesuai kebutuhan |
-| 📊 Dashboard | Grafik & ringkasan keuangan bulanan |
-| 🎯 Budget | Set anggaran per kategori, dapat notifikasi jika mendekati limit |
-| 🔍 Riwayat | Filter, search, dan lihat semua transaksi |
-| 📄 Laporan | Export ringkasan bulanan ke PDF |
+| 💰 Catat Transaksi | Input pemasukan & pengeluaran dengan cepat (< 10 detik) |
+| 📅 Filter Bulan | Lihat transaksi per bulan; navigasi < Agustus 2026 > |
+| 📊 Dashboard | Total Saldo kumulatif (terbawa antar bulan otomatis) |
+| 🎯 Budget Group | Auto-Budget 50/30/20: "Kebutuhan Pokok" & "Keinginan" dalam 1 budget |
+| 🔍 Riwayat | Filter, search, dan lihat riwayat transaksi per bulan |
+| 📄 Laporan | Ringkasan per kategori + Export PDF |
 | 🔄 Multi-Wallet | Kelola Tunai, Bank, GoPay, OVO dalam satu tempat |
-| ☁️ iCloud Sync | Sinkronisasi antar MacBook ↔ iPhone (opsional) |
+| ☁️ Cloud Sync | Realtime sync via Firebase Firestore (MacBook ↔ iPhone) |
+| 🔔 Notifikasi | Pengingat harian & awal bulan (jam bisa diatur) |
+| 🧠 Smart Advice | Saran keuangan otomatis berbasis aturan |
 
 ---
 
@@ -37,55 +40,48 @@ Dibuat dengan **SwiftUI + SwiftData** — teknologi terbaru Apple yang memungkin
 | | Minimum |
 |---|---|
 | **MacBook** | macOS 26 (Tahoe) |
-| **iPhone** | iOS 26, iPhone 13 ke atas |
-| **Xcode** | 26.6 |
-| **Swift** | 6.3.3 |
-| **Apple ID** | Diperlukan untuk install ke device |
+| **iPhone** | iOS 26 |
+| **Xcode** | 26 |
+| **Swift** | 6.3 |
+| **Internet** | Diperlukan untuk Firebase sync |
+| **Apple ID** | Diperlukan untuk install ke device (sideload) |
 
 ---
 
 ## 🚀 Cara Instalasi
 
-### 1. Clone / Download Project
+### 1. Clone Project
 ```bash
-# Jika menggunakan Git
 git clone https://github.com/Wahyu-30/CashWay.git
-
-# Atau download ZIP dan extract ke folder yang diinginkan
 ```
 
-### 2. Setup Firebase (Penting)
-Karena aplikasi ini menggunakan Firebase untuk autentikasi dan database, file konfigurasi Firebase dirahasiakan dan tidak di-push ke GitHub. Kamu perlu menambahkannya secara manual:
-1. Buat project baru di [Firebase Console](https://console.firebase.google.com/).
-2. Tambahkan aplikasi iOS/macOS dengan Bundle ID `com.namakamu.cashway`.
+### 2. Setup Firebase
+File `GoogleService-Info.plist` tidak di-push ke GitHub. Tambahkan secara manual:
+1. Buat project di [Firebase Console](https://console.firebase.google.com/).
+2. Tambahkan aplikasi iOS/macOS dengan Bundle ID kamu.
 3. Aktifkan **Authentication** (Google Sign-In) & **Firestore Database**.
-4. Download file `GoogleService-Info.plist`.
-5. Masukkan file tersebut ke dalam folder `CashWay/CashWay/App/` di Xcode project kamu.
+4. Download `GoogleService-Info.plist` dan masukkan ke `CashWay/CashWay/App/`.
 
 ### 3. Buka di Xcode
 ```bash
-open CashWay.xcodeproj
+open CashWay/CashWay.xcodeproj
 ```
-Atau buka Xcode → File → Open → pilih file `CashWay.xcodeproj`
 
-### 3. Setting Bundle ID & Team
+### 4. Setting Signing
 1. Pilih project `CashWay` di sidebar Xcode
-2. Klik tab **Signing & Capabilities**
-3. Ubah **Bundle Identifier** menjadi: `com.namakamu.cashway`
-4. Di **Team**, pilih Apple ID kamu (login jika belum)
+2. Tab **Signing & Capabilities** → pilih **Team** (Apple ID kamu)
 
-### 4. Install ke iPhone
+### 5. Install ke iPhone
 1. Sambungkan iPhone ke Mac via USB
-2. Pilih device iPhone kamu di toolbar Xcode
-3. Tekan tombol ▶ **Run** atau `Cmd + R`
-4. Di iPhone, buka **Settings → General → VPN & Device Management**
-5. Trust developer certificate kamu
-6. Selesai! CashWay siap digunakan 🎉
+2. Pilih device iPhone di toolbar Xcode
+3. Tekan `Cmd + R`
+4. Di iPhone: **Settings → General → VPN & Device Management** → Trust developer
+5. Selesai! 🎉
 
-### 5. Run di MacBook
-1. Di toolbar Xcode, pilih **My Mac** sebagai target
-2. Tekan `Cmd + R`
-3. Aplikasi akan terbuka langsung di Mac
+> ⚠️ **Catatan sertifikat:** Sideload gratis berlaku 7 hari. Aplikasi menampilkan peringatan di hari ke-6/7. Rebuild dari Xcode untuk memperbarui sertifikat.
+
+### 6. Run di MacBook
+Di toolbar Xcode pilih **My Mac** → tekan `Cmd + R`
 
 ---
 
@@ -93,76 +89,83 @@ Atau buka Xcode → File → Open → pilih file `CashWay.xcodeproj`
 
 ```
 CashWay/
-├── CashWay.xcodeproj/
-├── Shared/                         # Kode bersama macOS + iOS
-│   ├── App/
-│   │   └── CashWayApp.swift        # Entry point aplikasi
-│   ├── Models/                     # Data models (SwiftData)
-│   │   ├── Transaction.swift
-│   │   ├── Category.swift
-│   │   ├── Budget.swift
-│   │   └── Wallet.swift
-│   ├── ViewModels/                 # Business logic
-│   │   ├── DashboardViewModel.swift
-│   │   ├── TransactionViewModel.swift
-│   │   └── BudgetViewModel.swift
-│   ├── Views/                      # UI screens
-│   │   ├── Dashboard/
-│   │   ├── Transactions/
-│   │   ├── Budget/
-│   │   ├── Reports/
-│   │   └── Settings/
-│   ├── Components/                 # Komponen UI reusable
-│   └── Utilities/                  # Helper & extensions
-├── CashWay iOS/                    # iOS-specific files
-├── CashWay macOS/                  # macOS-specific files
-└── docs/                           # Dokumentasi
-    ├── PRD.md
-    ├── ROADMAP.md
-    └── AGENT.md
+├── AGENT.md          # Panduan implementasi untuk AI
+├── PRD.md            # Product Requirements Document
+├── ROADMAP.md        # Roadmap pengembangan
+├── DESIGN.md         # Design system
+└── CashWay/
+    └── CashWay/
+        ├── App/              # Entry point (CashWayApp.swift)
+        ├── Models/           # DTO Firestore: Transaction, Category, Wallet, Budget, SavingsGoal
+        ├── Services/         # DataStore, AuthService, NotificationManager, PDFExporter
+        ├── Utilities/        # ColorExtensions, CurrencyFormatter, DefaultData, SmartAdvice
+        ├── ViewModels/       # DashboardViewModel, TransactionViewModel, dll
+        └── Views/
+            ├── Auth/         # Login screen
+            ├── Dashboard/    # Halaman utama
+            ├── Transactions/ # Daftar & input transaksi
+            ├── Savings/      # Tabungan & goals
+            ├── Budget/       # Budget group & wizard
+            ├── Reports/      # Laporan & PDF export
+            └── Settings/     # Pengaturan, notifikasi, cleanup
 ```
 
 ---
 
-## 📈 Status Pengerjaan (Progress)
+## 📈 Status Pengerjaan
 
-Saat ini CashWay telah menyelesaikan implementasi fitur inti beserta cloud sync menggunakan **Firebase** dan autentikasi dengan **Google Sign-In**.
+### ✅ Selesai (v1.0)
 
-✅ **Selesai:**
-- Setup Xcode Project (SwiftUI)
-- UI/UX Premium Dark Mode
-- Fitur input & hapus transaksi, Budget, Tabungan, & Laporan
-- *Smart Advice Engine* (Peringatan cerdas pengeluaran & Auto-Budgeting)
-- Migrasi Data Layer: Dari `SwiftData` (offline) menjadi **Firebase Firestore** (Realtime Cloud Sync)
-- Autentikasi Pengguna: **Google Sign-In** untuk macOS dan iOS via Firebase Auth
-- App Sandbox & Keychain Sharing di macOS
-- Smooth UI Animations (`SlideInCard`) di semua halaman utama
-- **App Icon macOS & iOS:** Full generator icon multi-resolusi.
-- **Perbaikan Bug Internal:** Penyempurnaan urutan inisialisasi Firebase & StateObject untuk mencegah *memory leak* dan log error.
-- **Isolasi Data Per Akun Google:** `userId` scoping di seluruh model data, sehingga tiap pengguna hanya melihat datanya sendiri.
-- **Firebase Security Rules:** Database dikunci menggunakan `userId` di Firebase Console.
-- **Login/Logout Multi-Akun:** User bisa ganti akun Google, data tidak bocor antar akun.
-- **Nama Dinamis:** Sapaan di Dashboard dan profil sidebar otomatis menggunakan nama akun Google.
-- **Local Notifications:** Pengingat harian (default 20:00) & pengingat awal bulan (default 09:00 tanggal 1) yang dapat dikustomisasi oleh pengguna di Pengaturan.
-- **Banner Kedaluwarsa Sertifikat:** Peringatan di Dashboard jika sertifikat Apple Developer Gratis (7 hari) akan segera habis.
-- **Laporan Dashboard Profesional:** Halaman Laporan dirombak total menjadi tabel bergaya dashboard (Anggaran · Realisasi · Progress · % Pakai) lengkap dengan grafik donut & tren 12 bulan.
-- **Export PDF:** Laporan bulanan bisa diekspor sebagai file PDF berkualitas tinggi dan dibagikan langsung dari aplikasi.
+**Transaksi:**
+- Input, edit, hapus transaksi (dengan konfirmasi)
+- Filter per bulan (navigasi < Bulan Tahun >)
+- "Semua Bulan" untuk lihat seluruh riwayat
+- iOS: swipe kiri → hapus; swipe kanan → edit
+- Mac: klik kanan → menu hapus/edit
 
-⏳ **Akan Datang (Rencana v2.0):**
-1. **Investasi / Portfolio Tracker:** Pantau aset saham, reksa dana, kripto.
-2. **Kolaborasi:** Budget bersama untuk pasangan atau keluarga.
-3. **Import Rekening Bank:** Sinkronisasi otomatis mutasi via Open Banking API.
+**Dashboard:**
+- **Total Saldo kumulatif** — saldo bulan lalu otomatis terbawa ke bulan ini
+- Badge Masuk/Keluar menampilkan aktivitas bulan berjalan
+- Chart Pemasukan vs Pengeluaran per hari
+- Sumber pemasukan (Gaji, Freelance, Orang Tua)
+- Banner peringatan sertifikat (hanya hari ke-6/7)
+
+**Budget:**
+- **Auto-Budget Wizard 50/30/20** → 2 budget group:
+  - "Kebutuhan Pokok (50%)" = Makan & Minum + Transportasi + Kesehatan + Rumah & Tagihan + Pendidikan
+  - "Keinginan (30%)" = Hiburan + Belanja + Langganan Digital + Perjalanan + Perlengkapan Kerja
+  - 20% Tabungan → hanya info, tidak dibuat budget
+- Hapus budget dengan konfirmasi (tombol 🗑 di kartu / Mac klik kanan)
+- Laporan terupdate otomatis setelah hapus
+
+**Laporan:**
+- Tabel per kategori responsif (works di iPhone kecil)
+- Export PDF berkualitas tinggi
+
+**Infrastruktur:**
+- Firebase Firestore realtime sync
+- Google Sign-In (macOS & iOS)
+- Isolasi data per akun (`userId`)
+- Firestore Security Rules
+- Seed data default (async/await, ID deterministik)
+- Cleanup data duplikat di Settings
+- Notifikasi lokal harian & awal bulan
+
+### ⏳ Rencana (v1.1)
+- Kategori custom (tambah/edit sendiri)
+- iOS Widget (saldo + quick add)
+- Recurring transactions (cicilan, langganan)
 
 ---
 
 ## 🎨 Design System
 
-- **Tema default**: Dark Mode (Copilot Money Style)
-- **Background**: `#000814` (Midnight Canvas)
-- **Accent**: `#1c6cff` (Signal Blue)
-- **Income**: `#4CAF82` (Emerald Green)
-- **Expense**: `#FF6B6B` (Coral Red)
-- **Typography**: SF Pro (system font Apple)
+- **Tema:** Dark Mode (dark premium)
+- **Background:** `#0F0F14`
+- **Accent:** `#00C9A7` (Teal)
+- **Income:** `#4CAF82` (Emerald Green)
+- **Expense:** `#FF6B6B` (Coral Red)
+- **Typography:** SF Pro (system font Apple)
 
 ---
 

@@ -1,202 +1,154 @@
 # 🗺️ CashWay — Roadmap Pengembangan
 
-**Versi Target:** 1.0  
-**Estimasi Total:** 8 Minggu  
-**Tech Stack:** Swift 6.3.3 · SwiftUI · SwiftData · Xcode 26.6  
+**Versi Saat Ini:** 1.0 (Production)
+**Tech Stack:** Swift 6.3 · SwiftUI · Firebase Firestore · Firebase Auth · Xcode 26
+**Update Terakhir:** 1 September 2026
 
 ---
 
 ## 🔭 Visi Jangka Panjang
 
 ```
-v1.0 → MVP (offline, macOS + iOS)
-v1.1 → iCloud Sync + Widget iOS
-v1.2 → Recurring Transactions + PDF Export
-v2.0 → Import CSV Rekening Koran + Advanced Analytics
+v1.0 → MVP (Firebase Cloud Sync, macOS + iOS) ✅ SELESAI
+v1.1 → Fitur Lanjutan (Custom Category, Recurring Transactions, Widget)
+v2.0 → Kolaborasi & Import CSV Rekening Koran + Advanced Analytics
 ```
 
 ---
 
-## 📅 Phase 1 — Foundation & Setup (Minggu 1)
+## ✅ Phase 1 — Foundation & Setup
+**Status: SELESAI**
 
-**Goal:** Project bisa dibuild dan jalan di MacBook + iPhone
-
-### Tasks
-- [ ] Buat project Xcode multi-platform (macOS + iOS target)
-- [ ] Setup SwiftData stack (ModelContainer, ModelContext)
-- [ ] Define semua data models:
-  - `Transaction.swift`
-  - `Category.swift`
-  - `Wallet.swift`
-  - `Budget.swift`
-- [ ] Setup navigation structure (TabView)
-- [ ] Setup color palette & design tokens di `Assets.xcassets`
-- [ ] Setup SF Symbol library untuk icons
-- [ ] Seed data kategori default (14 expense + 6 income)
-- [ ] Test build di MacBook dan iPhone 13
-
-### Deliverable
-✅ App terbuka di kedua device dengan UI skeleton (kosong tapi berfungsi)
+- Project Xcode multi-platform (macOS + iOS target)
+- Navigasi TabView / NavigationSplitView
+- Color palette & design tokens (dark premium)
+- SF Symbol icon library
 
 ---
 
-## 📅 Phase 2 — Core CRUD Transaksi (Minggu 2-3)
+## ✅ Phase 2 — Core CRUD Transaksi
+**Status: SELESAI**
 
-**Goal:** User bisa mencatat dan melihat transaksi
-
-### Minggu 2 — Input Transaksi
-- [ ] Screen: Add Transaction (bottom sheet / full screen)
-  - Amount input (numpad style, format Rupiah otomatis)
-  - Type toggle: Pengeluaran / Pemasukan
-  - Category picker (grid dengan icon)
-  - Wallet picker
-  - Date picker
-  - Note field
-- [ ] Simpan ke SwiftData
-- [ ] Validasi input (jumlah > 0, kategori dipilih, dll)
-
-### Minggu 3 — Riwayat & Edit
-- [ ] Screen: Transaction List
-  - Grouped by date
-  - Tampil icon kategori, jumlah (merah/hijau), catatan
-- [ ] Edit transaksi (swipe-to-edit atau tap)
-- [ ] Delete transaksi (swipe-to-delete dengan konfirmasi)
-- [ ] Filter: by kategori, by tipe, by rentang tanggal
-- [ ] Search transaksi by catatan/kategori
-
-### Deliverable
-✅ User bisa input, edit, hapus, dan cari transaksi
+- Input transaksi (jumlah, tipe, kategori, wallet, tanggal, catatan)
+- Riwayat transaksi grouped by date
+- Edit transaksi (swipe kanan / sheet)
+- **Hapus transaksi dengan konfirmasi alert**
+  - iOS: swipe kiri
+  - Mac: klik kanan → "Hapus Transaksi"
+- Filter tipe (Semua / Pengeluaran / Pemasukan)
+- Search transaksi by kata kunci
+- **Filter bulan** di halaman Transaksi (default: bulan ini)
+  - Navigasi < Bulan Ini > di atas daftar
+  - Tombol "Semua Bulan" untuk lihat seluruh riwayat
 
 ---
 
-## 📅 Phase 3 — Dashboard & Visualisasi (Minggu 4)
+## ✅ Phase 3 — Dashboard & Visualisasi
+**Status: SELESAI**
 
-**Goal:** User bisa melihat kondisi keuangan sekilas
-
-### Tasks
-- [ ] Screen: Dashboard (Home)
-  - Greeting + tanggal hari ini
-  - Card: Saldo Total (semua wallet)
-  - Card: Pemasukan bulan ini (hijau)
-  - Card: Pengeluaran bulan ini (merah)
-  - Bar chart: Pengeluaran 30 hari terakhir (Swift Charts)
-  - Pie chart / donut chart: Distribusi per kategori
-  - Recent transactions (5 terakhir)
-- [ ] Month switcher (navigasi bulan)
-- [ ] Animasi chart yang smooth
-
-### Deliverable
-✅ Dashboard visual dengan data real dari transaksi yang dicatat
+- Greeting + tanggal hari ini
+- **Kartu "Total Saldo" (kumulatif lintas bulan)**
+  - Saldo otomatis terbawa dari bulan ke bulan — tidak perlu input ulang
+  - Badge Masuk/Keluar menampilkan aktivitas bulan berjalan
+- Sumber Pemasukan (Gaji, Freelance, Orang Tua, Lainnya)
+- Bar chart Pemasukan vs Pengeluaran per hari
+- Smart Advice engine (rule-based)
+- Navigasi bulan `< Agustus 2026 >`
+- **Banner sertifikat sideload** — hanya muncul saat ≤ 1 hari tersisa
 
 ---
 
-## 📅 Phase 4 — Wallet & Budget (Minggu 5)
+## ✅ Phase 4 — Wallet & Budget
+**Status: SELESAI**
 
-**Goal:** User bisa kelola dompet dan set anggaran
+### Wallet
+- Multi-wallet: Tunai, Bank, GoPay, OVO
+- Saldo per wallet (real-time dari transaksi)
+- Add / Edit wallet
 
-### Wallet Management
-- [ ] Screen: Wallet List
-  - Card per wallet: nama, tipe, saldo saat ini
-  - Warna custom per wallet
-- [ ] Add / Edit / Delete wallet
-- [ ] Screen: Transfer antar wallet
-- [ ] Saldo wallet auto-update dari transaksi
-
-### Budget Management
-- [ ] Screen: Budget List
-  - Per kategori: batas budget vs pengeluaran (progress bar)
-  - Warning visual jika > 80%
-  - Danger visual jika > 100%
-- [ ] Set budget per kategori per bulan
-- [ ] In-app notification saat mendekati limit
-
-### Deliverable
-✅ Multi-wallet dan sistem budget berjalan
+### Budget
+- Budget per kategori per bulan
+- Progress bar (Aman / Hampir Habis / Melewati Budget)
+- **Group Budget (Auto-Budget Wizard 50/30/20):**
+  - "Kebutuhan Pokok (50%)" → 1 budget untuk Makan & Minum, Transportasi, Kesehatan, Rumah & Tagihan, Pendidikan
+  - "Keinginan (30%)" → 1 budget untuk Hiburan, Belanja, Langganan Digital, Perjalanan, Perlengkapan Kerja
+  - 20% Tabungan tidak dibuat sebagai budget (hanya informasi)
+- **Hapus budget dengan konfirmasi**
+  - Tombol 🗑 langsung di kartu budget (iOS)
+  - Klik kanan → "Hapus" (Mac)
+  - Laporan otomatis terupdate setelah hapus
+- Analisis Historis (rata-rata 3 bulan terakhir)
 
 ---
 
-## 📅 Phase 5 — Kategori Custom & Settings (Minggu 6)
+## ✅ Phase 5 — Laporan & Export PDF
+**Status: SELESAI**
 
-**Goal:** Personalisasi aplikasi
-
-### Custom Category
-- [ ] Add kategori baru (nama + icon SF Symbol + warna)
-- [ ] Edit kategori existing
-- [ ] Soft-delete kategori (tidak bisa hapus jika sudah dipakai transaksi)
-
-### Settings Screen
-- [ ] Profil: nama pengguna (dipakai di greeting)
-- [ ] Notifikasi budget: on/off
-- [ ] iCloud Sync: toggle on/off
-- [ ] Export data (JSON backup)
-- [ ] Tentang aplikasi (versi, credits)
-- [ ] Hapus semua data (dengan konfirmasi)
-
-### Deliverable
-✅ App bisa dipersonalisasi sepenuhnya
+- Laporan bulanan: ringkasan per kategori
+- Tabel Daftar Pengeluaran per Kategori (responsif untuk iPhone)
+- Chart tren bulanan
+- Export PDF (PDFKit) — simpan ke Files app / share sheet
+- Navigasi bulan di Laporan
 
 ---
 
-## 📅 Phase 6 — Laporan & Export (Minggu 7)
+## ✅ Phase 6 — Migrasi Firebase & Auth
+**Status: SELESAI**
 
-**Goal:** User bisa lihat & simpan laporan
-
-### Tasks
-- [ ] Screen: Reports
-  - Tab: Bulanan, Mingguan, Kategori
-  - Tabel ringkasan per kategori (jumlah transaksi, total)
-  - Tren pengeluaran (line chart per bulan)
-- [ ] Export ke PDF:
-  - Layout PDF: logo CashWay, periode, tabel transaksi, ringkasan
-  - Save ke Files app / share sheet
-- [ ] iCloud Sync implementation (CloudKit + SwiftData)
-
-### Deliverable
-✅ Laporan visual + PDF export + iCloud sync bekerja
+- Google Sign-In macOS & iOS via Firebase Auth
+- Cloud Firestore realtime sync
+- Isolasi data per akun (`userId` scoping di semua koleksi)
+- Login / Logout multi-akun
+- Firestore Security Rules (data hanya bisa dibaca/ditulis pemiliknya)
 
 ---
 
-## 📅 Phase 7 — Polish, Testing & Deploy (Minggu 8)
+## ✅ Phase 7 — UI Polish & Bug Fixes
+**Status: SELESAI**
 
-**Goal:** App siap dipakai sehari-hari
+- Animasi SlideInCard pada semua layar
+- AnimatedNumberText untuk angka berubah halus
+- App icon macOS & iOS
+- Dark premium design konsisten
+- Tabel Laporan responsif di iPhone (kolom lebih kecil, minimumScaleFactor)
+- Empty states yang informatif
 
-### UI/UX Polish
-- [ ] Animasi transisi antar screen (smooth)
-- [ ] Haptic feedback di action penting
-- [ ] Empty states (jika belum ada transaksi)
-- [ ] Loading states
-- [ ] Error handling yang user-friendly
-- [ ] Adaptive layout macOS (sidebar + detail pane)
+---
 
-### Testing
-- [ ] Manual testing semua fitur di iPhone 13
-- [ ] Manual testing di MacBook
-- [ ] Test iCloud sync (edit di Mac, cek di iPhone)
-- [ ] Test edge cases (jumlah sangat besar, kategori kosong, dll)
-- [ ] Performance test (1000+ transaksi)
+## ✅ Phase 8 — Notifikasi & Seeding
+**Status: SELESAI**
 
-### Deploy Final
-- [ ] Set app icon (1024x1024 + semua ukuran)
-- [ ] App name: "CashWay"
-- [ ] Bundle ID: `com.wahyuahmad.cashway`
-- [ ] Install final ke iPhone via Xcode
-- [ ] Install di MacBook (run from Xcode atau export .app)
+- Notifikasi pengingat harian (jam bisa diatur)
+- Notifikasi awal bulan (09:00)
+- Seed kategori & wallet default otomatis saat pertama login
+- Tombol "Bersihkan Data Duplikat" di Settings
+- `seedIfNeeded` menggunakan async/await + Firestore check
 
-### Deliverable
-✅ CashWay v1.0 berjalan di iPhone 13 + MacBook
+---
+
+## 🚧 Phase 9 — Kategori Custom (v1.1 — Belum Dimulai)
+
+**Goal:** User bisa tambah kategori sendiri
+
+- Tambah kategori baru (nama + icon SF Symbol + warna)
+- Edit kategori existing
+- Soft-delete kategori (tidak bisa hapus jika dipakai transaksi)
+- Contoh use case: "Potong Rambut" → kategori "Perawatan Diri" baru
 
 ---
 
 ## 🚧 Backlog (v1.1+)
 
-| Fitur | Estimasi |
-|-------|----------|
-| iOS Widget (saldo + quick add) | 1 minggu |
-| Recurring transactions (cicilan, langganan) | 1 minggu |
-| Import CSV rekening koran | 2 minggu |
-| Siri Shortcut "Tambah pengeluaran Rp X" | 1 minggu |
-| Face ID / Touch ID lock | 3 hari |
-| macOS Menu Bar widget | 1 minggu |
+| Fitur | Estimasi | Catatan |
+|-------|----------|---------|
+| Kategori custom (tambah/edit) | 1 minggu | Phase 9 |
+| iOS Widget (saldo + quick add) | 1 minggu | Butuh App Group entitlement |
+| Recurring transactions (cicilan, langganan) | 1 minggu | |
+| Import CSV rekening koran | 2 minggu | |
+| Siri Shortcut "Tambah pengeluaran Rp X" | 1 minggu | |
+| Face ID / Touch ID lock | 3 hari | |
+| macOS Menu Bar widget | 1 minggu | |
+| Transfer antar wallet | 3 hari | |
 
 ---
 
@@ -204,16 +156,15 @@ v2.0 → Import CSV Rekening Koran + Advanced Analytics
 
 | Phase | Status | Update Terakhir |
 |-------|--------|-----------------|
-| Phase 1: Foundation (UI/UX) | ✅ Selesai | UI Dark Mode (Copilot Style) |
-| Phase 2: CRUD Transaksi | ✅ Selesai | Menyimpan & filter transaksi |
-| Phase 3: Dashboard & AI Advice | ✅ Selesai | Auto-budget & Smart Advice |
-| Phase 4: Tabungan & Budget | ✅ Selesai | Progress tabungan & limit budget |
-| Phase 5: Migrasi Firebase | ✅ Selesai | Data realtime via Firestore (Cloud Sync) |
-| Phase 6: Autentikasi Google | ✅ Selesai | Google Sign-In macOS & iOS via Firebase Auth |
-| Phase 7: UI Polish & Bug Fixes | ✅ Selesai | Animasi SlideInCard, App Icon macOS, Firebase Init Fix |
-| Phase 8: Laporan & Export | ✅ Selesai | Tabel Anggaran bergaya dashboard + Export PDF |
-| Phase 9: Push Notifications | ✅ Selesai | Reminder harian & awal bulan |
-| Phase 10: Firestore Security Rules | ✅ Selesai | Kunci database berdasar `userId` |
+| Phase 1: Foundation & Setup | ✅ Selesai | Dark Mode, TabView, Design Tokens |
+| Phase 2: CRUD Transaksi | ✅ Selesai | Filter bulan + swipe delete + Mac context menu |
+| Phase 3: Dashboard | ✅ Selesai | Total Saldo kumulatif, banner sertifikat hari ke-6/7 |
+| Phase 4: Wallet & Budget | ✅ Selesai | Group budget 50/30, hapus budget + konfirmasi |
+| Phase 5: Laporan & PDF | ✅ Selesai | Tabel responsif iPhone, PDF export |
+| Phase 6: Firebase & Auth | ✅ Selesai | Google Sign-In, Firestore realtime, Security Rules |
+| Phase 7: UI Polish | ✅ Selesai | SlideInCard, AnimatedNumber, App Icon |
+| Phase 8: Notifikasi & Seeding | ✅ Selesai | Seed async/await, cleanup duplikat, notifikasi |
+| Phase 9: Kategori Custom | 🔲 Belum | v1.1 |
 
 ---
 
