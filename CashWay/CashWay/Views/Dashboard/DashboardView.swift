@@ -449,14 +449,20 @@ struct DashboardView: View {
                 )
                 .frame(height: 120)
             } else {
-                VStack(spacing: 1) {
+                VStack(spacing: 0) {
                     ForEach(vm.recentTransactions) { transaction in
                         TransactionRowView(transaction: transaction)
+                            .padding(.horizontal, CWSpacing.md)
+                            .padding(.vertical, 4)
+                        
                         if transaction.id != vm.recentTransactions.last?.id {
-                            Divider().background(Color.cwBorder).padding(.leading, 52)
+                            Divider()
+                                .background(Color.cwBorder)
+                                .padding(.leading, 16 + 40 + CWSpacing.sm) // 16(padding) + 40(icon) + 8(spacing) = 64
                         }
                     }
                 }
+                .padding(.vertical, 8)
                 .background(Color.cwSurface, in: RoundedRectangle(cornerRadius: CWRadius.md))
             }
         }
