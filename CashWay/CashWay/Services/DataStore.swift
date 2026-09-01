@@ -128,11 +128,14 @@ class DataStore: ObservableObject {
         let cal = Calendar.current
         for i in 0..<budgets.count {
             let budget = budgets[i]
+            let catIds = Set(budget.allCategoryIds)
+            // Jika tidak ada category ID sama sekali, skip
+            guard !catIds.isEmpty else { budgets[i].spent = 0; continue }
             let spent = transactions.filter { tx in
                 guard tx.type == .expense, let catId = tx.category?.id else { return false }
                 let m = cal.component(.month, from: tx.date)
                 let y = cal.component(.year, from: tx.date)
-                return m == budget.month && y == budget.year && catId == budget.category?.id
+                return m == budget.month && y == budget.year && catIds.contains(catId)
             }.reduce(0) { $0 + $1.amount }
             budgets[i].spent = spent
         }

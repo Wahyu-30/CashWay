@@ -172,7 +172,7 @@ struct BudgetView: View {
         VStack(spacing: CWSpacing.sm) {
             ForEach(Array(monthBudgets.enumerated()), id: \.element.id) { index, budget in
                 SlideInCard(index: index) {
-                    BudgetRowView(budget: budget)
+                    BudgetRowView(budget: budget, allCategories: dataStore.categories)
                         .onTapGesture { editingBudget = budget }
                         .contextMenu {
                             Button("Edit") { editingBudget = budget }
@@ -218,26 +218,49 @@ struct BudgetView: View {
 // ============================================================
 // MARK: - BudgetRowView
 // Satu baris budget dengan progress bar.
+// Mendukung group budget (satu budget untuk banyak kategori).
 // ============================================================
 
 struct BudgetRowView: View {
     let budget: Budget
+    // Semua kategori dari DataStore — untuk lookup nama kategori tambahan di group
+    var allCategories: [Category] = []
+
+    // Kategori tambahan (selain primary) yang masuk dalam group budget
+    private var extraCategories: [Category] {
+        allCategories.filter { budget.extraCategoryIds.contains($0.id) }
+    }
+
+    // Apakah ini group budget?
+    private var isGroup: Bool { budget.groupName != nil }
 
     var body: some View {
         VStack(spacing: CWSpacing.sm) {
             HStack {
-                // Icon + nama kategori
+                // Icon + nama
                 HStack(spacing: CWSpacing.sm) {
-                    Image(systemName: budget.category?.icon ?? "questionmark")
-                        .foregroundStyle(Color(hex: budget.category?.colorHex ?? "#8B8FA8"))
+                    Image(systemName: isGroup ? "slider.horizontal.3" : (budget.category?.icon ?? "questionmark"))
+                        .foregroundStyle(isGroup ? Color.cwAccent : Color(hex: budget.category?.colorHex ?? "#8B8FA8"))
                         .font(.body)
                         .frame(width: 32, height: 32)
                         .background(
-                            Color(hex: budget.category?.colorHex ?? "#8B8FA8").opacity(0.15),
+                            (isGroup ? Color.cwAccent : Color(hex: budget.category?.colorHex ?? "#8B8FA8")).opacity(0.15),
                             in: RoundedRectangle(cornerRadius: CWRadius.sm)
                         )
-                    Text(budget.category?.name ?? "Kategori")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(Color.cwTextPrimary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(budget.groupName ?? budget.category?.name ?? "Kategori")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.cwTextPrimary)
+                        // Tampilkan kategori yang termasuk dalam group
+                        if isGroup {
+                            let cats = ([budget.category] + extraCategories.map { Optional($0) })
+                                .compactMap { $0 }
+                            Text(cats.map { $0.name }.joined(separator: " · "))
+                                .font(.caption2)
+                                .foregroundStyle(Color.cwTextSecondary)
+                                .lineLimit(2)
+                        }
+                    }
                 }
                 Spacer()
                 // Status badge

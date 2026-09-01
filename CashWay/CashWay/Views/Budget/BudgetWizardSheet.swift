@@ -162,31 +162,54 @@ struct BudgetWizardSheet: View {
         }
         dismiss()
     }
-    
+
     private func generate503020Budgets() {
         guard income > 0 else { return }
-        
-        let needsLimit = income * 0.50
-        let wantsLimit = income * 0.30
-        
-        let needCats = ["Makan & Minum", "Rumah & Tagihan", "Transportasi", "Kesehatan", "Pendidikan"]
-        let wantCats = ["Hiburan", "Belanja", "Langganan Digital", "Perjalanan", "Perlengkapan Kerja"]
-        
-        // Find existing categories
-        let nCats = allExpenseCategories.filter { needCats.contains($0.name) }
-        let wCats = allExpenseCategories.filter { wantCats.contains($0.name) }
-        
+
+        let needsLimit = income * 0.50   // Kebutuhan pokok
+        let wantsLimit = income * 0.30   // Keinginan
+
+        let needCatNames: [String] = ["Makan & Minum", "Transportasi", "Kesehatan", "Rumah & Tagihan", "Pendidikan"]
+        let wantCatNames: [String] = ["Hiburan", "Belanja", "Langganan Digital", "Perjalanan", "Perlengkapan Kerja"]
+
+        let nCats = allExpenseCategories.filter { needCatNames.contains($0.name) }
+        let wCats = allExpenseCategories.filter { wantCatNames.contains($0.name) }
+
+        // Hapus semua budget lama bulan ini agar tidak ada duplikat per-kategori lama
+        let oldBudgets = dataStore.budgets.filter { $0.month == month && $0.year == year }
+        oldBudgets.forEach { dataStore.deleteBudget($0) }
+
+        // Buat 1 budget GROUP untuk Kebutuhan Pokok (50%)
         if !nCats.isEmpty {
-            let limitPerCat = needsLimit / Decimal(nCats.count)
-            for cat in nCats { insertOrUpdate(category: cat, amount: limitPerCat) }
+            let primary = nCats[0]
+            let extras  = Array(nCats.dropFirst().map { $0.id })
+            let budget = Budget(
+                amount:          needsLimit,
+                month:           month,
+                year:            year,
+                category:        primary,
+                groupName:       "Kebutuhan Pokok (50%)",
+                extraCategoryIds: extras
+            )
+            dataStore.addBudget(budget)
         }
-        
+
+        // Buat 1 budget GROUP untuk Keinginan (30%)
         if !wCats.isEmpty {
-            let limitPerCat = wantsLimit / Decimal(wCats.count)
-            for cat in wCats { insertOrUpdate(category: cat, amount: limitPerCat) }
+            let primary = wCats[0]
+            let extras  = Array(wCats.dropFirst().map { $0.id })
+            let budget = Budget(
+                amount:          wantsLimit,
+                month:           month,
+                year:            year,
+                category:        primary,
+                groupName:       "Keinginan (30%)",
+                extraCategoryIds: extras
+            )
+            dataStore.addBudget(budget)
         }
     }
-    
+
     private func generateHistoricalBudgets() {
         for data in expenseData {
             // Buffer 10% lebih besar dari rata-rata agar tidak terlalu ketat
@@ -194,7 +217,7 @@ struct BudgetWizardSheet: View {
             insertOrUpdate(category: data.category, amount: proposed)
         }
     }
-    
+
     private func insertOrUpdate(category: Category, amount: Decimal) {
         let existing = dataStore.budgets
         if var budget = existing.first(where: { $0.month == month && $0.year == year && $0.category?.id == category.id }) {

@@ -6,12 +6,24 @@ nonisolated struct Budget: Identifiable, Codable, Equatable, Hashable {
     var amount: Decimal
     var month: Int
     var year: Int
-    
+
     // We store the full category object here for easier querying in NoSQL.
     var category: Category?
-    
+
+    // Group budget support — satu budget bisa mencakup banyak kategori
+    var groupName: String?          // Misal: "Kebutuhan Pokok (50%)" — jika nil, ini bukan group budget
+    var extraCategoryIds: [String]  // ID kategori tambahan di luar `category`
+
     // Virtual property, not stored in DB, calculated at runtime
     var spent: Decimal = 0
+
+    // Semua ID kategori yang masuk dalam budget ini (primary + extras)
+    var allCategoryIds: [String] {
+        var ids: [String] = []
+        if let primaryId = category?.id { ids.append(primaryId) }
+        ids.append(contentsOf: extraCategoryIds)
+        return ids
+    }
 
     init(
         id: String = UUID().uuidString,
@@ -19,7 +31,9 @@ nonisolated struct Budget: Identifiable, Codable, Equatable, Hashable {
         amount: Decimal,
         month: Int,
         year: Int,
-        category: Category? = nil
+        category: Category? = nil,
+        groupName: String? = nil,
+        extraCategoryIds: [String] = []
     ) {
         self.id = id
         self.userId = userId
@@ -27,6 +41,8 @@ nonisolated struct Budget: Identifiable, Codable, Equatable, Hashable {
         self.month = month
         self.year = year
         self.category = category
+        self.groupName = groupName
+        self.extraCategoryIds = extraCategoryIds
     }
     
     var remaining: Decimal {
