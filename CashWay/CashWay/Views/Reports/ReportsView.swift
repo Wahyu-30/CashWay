@@ -579,9 +579,13 @@ struct ReportsView: View {
                         .annotation(position: .overlay) {
                             if item.amount / (cachedExpenseChart.reduce(0) { $0 + $1.amount }) > 0.08 {
                                 Text(item.name)
-                                    .font(.system(size: 9, weight: .semibold))
+                                    .font(.system(size: 9, weight: .bold))
                                     .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.7), radius: 1, x: 0, y: 1)
                                     .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.5)
+                                    .padding(.horizontal, 2)
                             }
                         }
                     }
