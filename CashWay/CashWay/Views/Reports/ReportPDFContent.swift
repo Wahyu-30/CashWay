@@ -112,8 +112,35 @@ struct ReportPDFContent: View {
                         }
                         .font(.system(size: 10))
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 7)
+                        .padding(.top, 7)
+                        .padding(.bottom, row.subRows.isEmpty ? 7 : 2)
                         .background(idx.isMultiple(of: 2) ? Color.white : Color(hex: "#f5f8f8"))
+                        
+                        if !row.subRows.isEmpty {
+                            VStack(spacing: 0) {
+                                ForEach(row.subRows) { sub in
+                                    HStack(spacing: 6) {
+                                        HStack(spacing: 5) {
+                                            Rectangle().fill(Color(hex: "#cccccc")).frame(width: 1, height: 16).padding(.leading, 3)
+                                            Circle().fill(Color(hex: sub.colorHex).opacity(0.5)).frame(width: 5, height: 5)
+                                            Text(sub.categoryName).lineLimit(1).foregroundStyle(Color(hex: "#666666"))
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        
+                                        Text("").frame(width: 90, alignment: .trailing)
+                                        Text(CurrencyFormatter.formatShort(sub.spent))
+                                            .frame(width: 90, alignment: .trailing)
+                                            .foregroundStyle(Color(hex: "#666666"))
+                                        Spacer().frame(width: 130 + 55 + 6)
+                                    }
+                                    .font(.system(size: 9))
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 4)
+                                }
+                            }
+                            .padding(.bottom, 4)
+                            .background(idx.isMultiple(of: 2) ? Color.white : Color(hex: "#f5f8f8"))
+                        }
 
                         Divider().foregroundStyle(Color(hex: "#e0e0e0"))
                     }
@@ -183,8 +210,41 @@ struct ReportPDFContent: View {
                             SectorMark(angle: .value("Jumlah", item.amount), innerRadius: .ratio(0.45), angularInset: 1.5)
                                 .foregroundStyle(Color(hex: item.colorHex))
                                 .cornerRadius(3)
+                                .annotation(position: .overlay) {
+                                    if item.amount / (expenseChart.reduce(0) { $0 + $1.amount }) > 0.08 {
+                                        Text(item.name)
+                                            .font(.system(size: 7, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                }
                         }
                         .frame(height: 180)
+                        
+                        let groupRows = budgetRows.filter { !$0.subRows.isEmpty && $0.spent > 0 }
+                        if !groupRows.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Keterangan Bagan:")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundStyle(Color(hex: "#666666"))
+                                    .padding(.top, 8)
+                                    
+                                ForEach(groupRows) { row in
+                                    HStack(alignment: .top, spacing: 5) {
+                                        Circle().fill(Color(hex: row.colorHex)).frame(width: 6, height: 6).padding(.top, 3)
+                                        VStack(alignment: .leading, spacing: 1) {
+                                            Text(row.categoryName)
+                                                .font(.system(size: 9, weight: .bold))
+                                                .foregroundStyle(Color(hex: "#333333"))
+                                            Text(row.subRows.map { $0.categoryName }.joined(separator: ", "))
+                                                .font(.system(size: 8))
+                                                .foregroundStyle(Color(hex: "#777777"))
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.top, 2)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
