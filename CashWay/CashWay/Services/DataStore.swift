@@ -141,6 +141,20 @@ class DataStore: ObservableObject {
         }
     }
     
+    // Menghitung sisa saldo dari awal pembuatan akun sampai tepat sebelum bulan/tahun yang diminta
+    func getPreviousBalance(forMonth month: Int, year: Int) -> Decimal {
+        let cal = Calendar.current
+        let previousTx = transactions.filter { tx in
+            let m = cal.component(.month, from: tx.date)
+            let y = cal.component(.year, from: tx.date)
+            return y < year || (y == year && m < month)
+        }
+        let initialTotal = wallets.reduce(0) { $0 + $1.initialBalance }
+        let prevIncome = previousTx.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+        let prevExpense = previousTx.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+        return initialTotal + prevIncome - prevExpense
+    }
+    
     // MARK: - Writers
     private func saveDocument<T: Encodable>(collection: String, id: String, data: T) {
         do {

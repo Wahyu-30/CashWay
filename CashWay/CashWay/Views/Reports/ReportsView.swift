@@ -197,7 +197,13 @@ struct ReportsView: View {
         let incomeTx  = monthTx.filter { $0.tx.type == .income  }
 
         let totalExpense  = expenseTx.reduce(Decimal(0)) { $0 + $1.tx.amount }
-        let totalIncome   = incomeTx.reduce(Decimal(0))  { $0 + $1.tx.amount }
+        var totalIncome   = incomeTx.reduce(Decimal(0))  { $0 + $1.tx.amount }
+        
+        let prevBalance = dataStore.getPreviousBalance(forMonth: month, year: year)
+        if prevBalance > 0 {
+            totalIncome += prevBalance
+        }
+        
         let netSaving     = totalIncome - totalExpense
 
         let initialTotal  = wallets.reduce(Decimal(0)) { $0 + $1.initialBalance }
@@ -270,6 +276,11 @@ struct ReportsView: View {
 
         // --- Income by Category ---
         var incomeDict: [String: (name: String, amount: Decimal, colorHex: String)] = [:]
+        
+        if prevBalance > 0 {
+            incomeDict["Sisa Saldo Bulan Sebelumnya"] = (name: "Sisa Saldo Bulan Sebelumnya", amount: prevBalance, colorHex: "#1a6cff")
+        }
+        
         for item in incomeTx {
             let name  = item.tx.category?.name     ?? "Lainnya"
             let color = item.tx.category?.colorHex ?? "#4CAF82"

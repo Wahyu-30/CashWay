@@ -42,8 +42,27 @@ final class DashboardViewModel {
     }
 
     // MARK: - Income Breakdown
+    var previousMonthBalance: Decimal {
+        let cal = Calendar.current
+        return allTransactions
+            .filter { tx in
+                let txYear  = cal.component(.year,  from: tx.date)
+                let txMonth = cal.component(.month, from: tx.date)
+                return txYear < selectedYear || (txYear == selectedYear && txMonth < selectedMonth)
+            }
+            .reduce(Decimal(0)) { result, tx in
+                switch tx.type {
+                case .income:   return result + tx.amount
+                case .expense:  return result - tx.amount
+                case .transfer: return result
+                }
+            }
+    }
+    
     var totalIncome: Decimal {
-        monthTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+        let currentIncome = monthTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+        let prev = previousMonthBalance
+        return currentIncome + (prev > 0 ? prev : 0)
     }
 
     var salaryIncome: Decimal {

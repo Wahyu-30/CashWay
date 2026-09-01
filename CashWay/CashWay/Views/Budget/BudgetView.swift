@@ -94,7 +94,10 @@ struct BudgetView: View {
             let y = cal.component(.year, from: $0.date)
             return m == selectedMonth && y == selectedYear && $0.type == .income
         }
-        return currentTx.reduce(0) { $0 + $1.amount }
+        let currentIncome = currentTx.reduce(0) { $0 + $1.amount }
+        let prevBalance = dataStore.getPreviousBalance(forMonth: selectedMonth, year: selectedYear)
+        
+        return currentIncome + (prevBalance > 0 ? prevBalance : 0)
     }
     
     private func calculateHistoricalData() -> [(category: Category, avgAmount: Decimal)] {

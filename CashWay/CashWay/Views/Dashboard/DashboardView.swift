@@ -174,6 +174,14 @@ struct DashboardView: View {
                         icon:   "figure.2.arms.open",
                         color:  Color(hex: "#ff33aa") // Tag Hot Pink
                     )
+                    if vm.previousMonthBalance > 0 {
+                        incomeSourceCard(
+                            label:  "Sisa Saldo Bulan Lalu",
+                            amount: vm.previousMonthBalance,
+                            icon:   "arrow.uturn.left.circle.fill",
+                            color:  Color(hex: "#1a6cff") // Blue
+                        )
+                    }
                 }
             }
         }
