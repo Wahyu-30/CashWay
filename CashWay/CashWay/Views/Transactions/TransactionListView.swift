@@ -2,7 +2,9 @@ import SwiftUI
 
 // ============================================================
 // MARK: - TransactionListView
-// Daftar semua transaksi dengan filter, search, dan swipe actions.
+// Daftar transaksi dengan filter bulan, tipe, search.
+// Default: bulan ini. Bisa diubah pakai navigasi bulan atau
+// klik chip "Semua Bulan" untuk lihat seluruh riwayat.
 // ============================================================
 
 struct TransactionListView: View {
@@ -10,6 +12,45 @@ struct TransactionListView: View {
     @EnvironmentObject private var dataStore: DataStore
 
     @State private var vm = TransactionViewModel()
+
+    // Filter bulan — default ke bulan & tahun saat ini
+    @State private var selectedMonth: Int = Calendar.current.component(.month, from: .now)
+    @State private var selectedYear:  Int = Calendar.current.component(.year,  from: .now)
+    @State private var showAllMonths: Bool = false   // jika true, tampilkan semua bulan
+
+    // Transaksi yang sudah difilter berdasarkan bulan terpilih
+    private var filteredByMonth: [Transaction] {
+        guard !showAllMonths else { return dataStore.transactions }
+        let cal = Calendar.current
+        return dataStore.transactions.filter {
+            cal.component(.month, from: $0.date) == selectedMonth &&
+            cal.component(.year,  from: $0.date) == selectedYear
+        }
+    }
+
+    // Navigasi bulan
+    private var monthTitle: String {
+        let f = DateFormatter()
+        f.locale     = Locale(identifier: "id_ID")
+        f.dateFormat = "MMMM yyyy"
+        return f.string(from: Calendar.current.date(
+            from: DateComponents(year: selectedYear, month: selectedMonth)) ?? .now)
+    }
+
+    private func prevMonth() {
+        if selectedMonth == 1 { selectedMonth = 12; selectedYear -= 1 }
+        else { selectedMonth -= 1 }
+    }
+
+    private func nextMonth() {
+        let now = Calendar.current
+        let curMonth = now.component(.month, from: .now)
+        let curYear  = now.component(.year,  from: .now)
+        guard selectedYear < curYear || (selectedYear == curYear && selectedMonth < curMonth)
+        else { return }
+        if selectedMonth == 12 { selectedMonth = 1; selectedYear += 1 }
+        else { selectedMonth += 1 }
+    }
 
     var body: some View {
         Group {
@@ -52,14 +93,25 @@ struct TransactionListView: View {
     // MARK: - List Content
     private var listContent: some View {
         List {
+            // --- Navigasi bulan ---
+            monthNavigationRow
+                .listRowBackground(Color.cwBackground)
+                .listRowSeparator(.hidden)
+
             filterChips
                 .listRowBackground(Color.cwBackground)
                 .listRowSeparator(.hidden)
 
-            let groups = vm.grouped(dataStore.transactions)
+            let groups = vm.grouped(filteredByMonth)
             if groups.isEmpty {
                 SlideInCard(index: 1) {
-                    ContentUnavailableView.search
+                    ContentUnavailableView(
+                        showAllMonths ? "Tidak ada transaksi" : "Belum ada transaksi bulan ini",
+                        systemImage: "tray.fill",
+                        description: Text(showAllMonths
+                            ? "Coba ubah filter atau cari kata kunci lain"
+                            : "Ketuk + untuk mencatat transaksi, atau ketuk \"Semua Bulan\" untuk lihat riwayat")
+                    )
                 }
                 .listRowBackground(Color.cwBackground)
             } else {
@@ -70,6 +122,7 @@ struct TransactionListView: View {
                                 TransactionRowView(transaction: transaction)
                             }
                             .listRowBackground(Color.cwSurface)
+                            // iOS: swipe kiri untuk hapus, swipe kanan untuk edit
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
                                     vm.deletingTransaction = transaction
@@ -84,6 +137,20 @@ struct TransactionListView: View {
                                     Label("Edit", systemImage: "pencil")
                                 }
                                 .tint(Color.cwAccent)
+                            }
+                            // Mac: klik kanan untuk hapus / edit
+                            .contextMenu {
+                                Button {
+                                    vm.editingTransaction = transaction
+                                } label: {
+                                    Label("Edit Transaksi", systemImage: "pencil")
+                                }
+                                Divider()
+                                Button(role: .destructive) {
+                                    vm.deletingTransaction = transaction
+                                } label: {
+                                    Label("Hapus Transaksi", systemImage: "trash")
+                                }
                             }
                         }
                     } header: {
@@ -103,6 +170,63 @@ struct TransactionListView: View {
         .listStyle(.insetGrouped)
         #endif
         .scrollContentBackground(.hidden)
+    }
+
+    // MARK: - Month Navigation Row
+    private var monthNavigationRow: some View {
+        HStack {
+            Button(action: prevMonth) {
+                Image(systemName: "chevron.left")
+                    .foregroundStyle(Color.cwAccent)
+                    .font(.callout.bold())
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            if showAllMonths {
+                Text("Semua Bulan")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.cwTextPrimary)
+            } else {
+                Text(monthTitle)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.cwTextPrimary)
+            }
+
+            Spacer()
+
+            Button(action: nextMonth) {
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(Color.cwAccent)
+                    .font(.callout.bold())
+            }
+            .buttonStyle(.plain)
+            .opacity(showAllMonths ? 0 : 1)
+        }
+        .padding(.vertical, CWSpacing.xs)
+        .overlay(alignment: .trailing) {
+            // Tombol toggle: Bulan Ini ↔ Semua Bulan
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showAllMonths.toggle()
+                    if !showAllMonths {
+                        // Reset ke bulan saat ini
+                        selectedMonth = Calendar.current.component(.month, from: .now)
+                        selectedYear  = Calendar.current.component(.year,  from: .now)
+                    }
+                }
+            } label: {
+                Text(showAllMonths ? "Bulan Ini" : "Semua Bulan")
+                    .font(.caption.bold())
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.cwSurface, in: Capsule())
+                    .foregroundStyle(Color.cwTextSecondary)
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, CWSpacing.md)
+        }
     }
 
     // MARK: - Filter Chips
