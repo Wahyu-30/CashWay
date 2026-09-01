@@ -283,10 +283,12 @@ struct ReportsView: View {
             .sorted { $0.amount > $1.amount }
             .map { (name: $0.name, amount: $0.amount, colorHex: $0.colorHex) }
 
-        let newExpenseChart = newBudgetRows.filter { $0.spent > 0 }
-            .map { (name: $0.categoryName,
-                    amount: NSDecimalNumber(decimal: $0.spent).doubleValue,
+        let newExpenseChart = spendingMap.values
+            .filter { $0.amount > 0 }
+            .map { (name: $0.name, 
+                    amount: NSDecimalNumber(decimal: $0.amount).doubleValue, 
                     colorHex: $0.colorHex) }
+            .sorted { $0.amount > $1.amount }
 
         // --- Monthly Trend — O(n) dengan dictionary ---
         var monthlyExpense: [String: Double] = [:]
