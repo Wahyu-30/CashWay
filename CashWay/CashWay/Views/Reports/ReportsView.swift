@@ -7,12 +7,20 @@ import UniformTypeIdentifiers
 // Data model untuk satu baris di tabel anggaran laporan.
 // ============================================================
 
+struct BudgetTableSubRow: Identifiable {
+    let id: String
+    let categoryName: String
+    let colorHex: String
+    let spent: Decimal
+}
+
 struct BudgetTableRow: Identifiable {
     let id: String
     let categoryName: String
     let colorHex: String
     let budgeted: Decimal?      // nil = tidak ada anggaran yang diset
     let spent: Decimal
+    let subRows: [BudgetTableSubRow] // Daftar kategori di dalam group ini
 
     var progress: Double {
         guard let b = budgeted, b > 0 else { return spent > 0 ? 1.2 : 0.0 }
@@ -218,15 +226,27 @@ struct ReportsView: View {
             // Tandai semua kategori dalam budget group ini sudah di-handle
             catIds.forEach { handledCatIds.insert($0) }
             
-            // Jumlahkan total dari map (ini mirip dgn yg dilakukan DataStore, tapi manual)
-            let totalSpent = catIds.reduce(Decimal(0)) { $0 + (spendingMap[$1]?.amount ?? 0) }
+            // Jumlahkan total dari map dan ambil sub-kategorinya jika ada pengeluaran
+            var subRows: [BudgetTableSubRow] = []
+            var totalSpent: Decimal = 0
+            
+            for catId in catIds {
+                if let info = spendingMap[catId], info.amount > 0 {
+                    totalSpent += info.amount
+                    // Hanya tambahkan sub-row jika ini adalah group budget
+                    if b.groupName != nil {
+                        subRows.append(BudgetTableSubRow(id: catId, categoryName: info.name, colorHex: info.colorHex, spent: info.amount))
+                    }
+                }
+            }
             
             newBudgetRows.append(BudgetTableRow(
                 id:           b.id, // ID budget
                 categoryName: b.groupName ?? b.category?.name ?? "Anggaran",
                 colorHex:     (b.groupName != nil) ? "#00C9A7" : (b.category?.colorHex ?? "#8B8FA8"),
                 budgeted:     b.amount,
-                spent:        totalSpent
+                spent:        totalSpent,
+                subRows:      subRows.sorted(by: { $0.spent > $1.spent })
             ))
         }
         
@@ -237,7 +257,8 @@ struct ReportsView: View {
                 categoryName: info.name,
                 colorHex: info.colorHex, 
                 budgeted: nil, 
-                spent: info.amount
+                spent: info.amount,
+                subRows: []
             ))
         }
         
@@ -355,54 +376,99 @@ struct ReportsView: View {
     }
 
     private func budgetTableRow(_ row: BudgetTableRow, isEven: Bool) -> some View {
-        HStack(spacing: 4) {
-            // Kategori
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(Color(hex: row.colorHex))
-                    .frame(width: 8, height: 8)
-                Text(row.categoryName)
-                    .font(.caption)
-                    .foregroundStyle(Color.cwTextPrimary)
+        VStack(spacing: 0) {
+            // MAIN ROW
+            HStack(spacing: 4) {
+                // Kategori / Group Name
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color(hex: row.colorHex))
+                        .frame(width: 8, height: 8)
+                    Text(row.categoryName)
+                        .font(.caption)
+                        .foregroundStyle(Color.cwTextPrimary)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Anggaran
+                Text(row.budgeted != nil ? CurrencyFormatter.formatShort(row.budgeted!) : "-")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(Color.cwTextSecondary)
+                    .frame(width: 68, alignment: .trailing)
+                    .lineLimit(1)
+
+                // Realisasi
+                Text(CurrencyFormatter.formatShort(row.spent))
+                    .font(.caption.bold().monospacedDigit())
+                    .foregroundStyle(row.isOverBudget ? Color(hex: "#FF6B6B") : Color.cwTextPrimary)
+                    .frame(width: 68, alignment: .trailing)
+                    .lineLimit(1)
+
+                // Progress Bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.cwBorder)
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(row.statusColor)
+                            .frame(width: geo.size.width * min(row.progress, 1.0))
+                    }
+                }
+                .frame(width: 58, height: 10)
+
+                // Persentase
+                Text(row.budgeted != nil ? String(format: "%.1f%%", row.percentage) : "-")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(row.isOverBudget ? Color(hex: "#FF6B6B") : Color.cwTextSecondary)
+                    .frame(width: 44, alignment: .trailing)
                     .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, CWSpacing.md)
+            .padding(.vertical, 10)
 
-            // Anggaran
-            Text(row.budgeted != nil ? CurrencyFormatter.formatShort(row.budgeted!) : "-")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(Color.cwTextSecondary)
-                .frame(width: 68, alignment: .trailing)
-                .lineLimit(1)
+            // SUB-ROWS (Breakdown of Group Budgets)
+            if !row.subRows.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(row.subRows) { sub in
+                        HStack(spacing: 4) {
+                            HStack(spacing: 6) {
+                                // Indentasi dengan garis vertikal samar
+                                Rectangle()
+                                    .fill(Color.cwBorder)
+                                    .frame(width: 1, height: 20)
+                                    .padding(.leading, 3)
+                                Circle()
+                                    .fill(Color(hex: sub.colorHex).opacity(0.5))
+                                    .frame(width: 6, height: 6)
+                                Text(sub.categoryName)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.cwTextSecondary)
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Realisasi
-            Text(CurrencyFormatter.formatShort(row.spent))
-                .font(.caption.bold().monospacedDigit())
-                .foregroundStyle(row.isOverBudget ? Color(hex: "#FF6B6B") : Color.cwTextPrimary)
-                .frame(width: 68, alignment: .trailing)
-                .lineLimit(1)
+                            // Kolom Anggaran kosong untuk sub-row
+                            Text("")
+                                .frame(width: 68, alignment: .trailing)
 
-            // Progress Bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.cwBorder)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(row.statusColor)
-                        .frame(width: geo.size.width * min(row.progress, 1.0))
+                            // Realisasi Sub-kategori
+                            Text(CurrencyFormatter.formatShort(sub.spent))
+                                .font(.system(size: 11).monospacedDigit())
+                                .foregroundStyle(Color.cwTextSecondary)
+                                .frame(width: 68, alignment: .trailing)
+                                .lineLimit(1)
+
+                            // Kolom Progress dan % kosong
+                            Spacer().frame(width: 58 + 44 + 4)
+                        }
+                        .padding(.horizontal, CWSpacing.md)
+                        .padding(.bottom, 6)
+                    }
                 }
+                .padding(.bottom, 4)
             }
-            .frame(width: 58, height: 10)
-
-            // Persentase
-            Text(row.budgeted != nil ? String(format: "%.1f%%", row.percentage) : "-")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(row.isOverBudget ? Color(hex: "#FF6B6B") : Color.cwTextSecondary)
-                .frame(width: 44, alignment: .trailing)
-                .lineLimit(1)
         }
-        .padding(.horizontal, CWSpacing.md)
-        .padding(.vertical, 10)
         .background(isEven ? Color.cwSurface : Color.cwBackground.opacity(0.5))
     }
 
