@@ -243,7 +243,7 @@ struct ReportsView: View {
             newBudgetRows.append(BudgetTableRow(
                 id:           b.id, // ID budget
                 categoryName: b.groupName ?? b.category?.name ?? "Anggaran",
-                colorHex:     (b.groupName != nil) ? "#00C9A7" : (b.category?.colorHex ?? "#8B8FA8"),
+                colorHex:     b.category?.colorHex ?? "#00C9A7",
                 budgeted:     b.amount,
                 spent:        totalSpent,
                 subRows:      subRows.sorted(by: { $0.spent > $1.spent })
@@ -573,6 +573,35 @@ struct ReportsView: View {
                         }
                     }
                     .frame(height: 220)
+                    
+                    // Keterangan isi Group Budget (Legend)
+                    let groupRows = cachedBudgetRows.filter { !$0.subRows.isEmpty && $0.spent > 0 }
+                    if !groupRows.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Keterangan Bagan:")
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.cwTextSecondary)
+                                .padding(.top, CWSpacing.sm)
+                                
+                            ForEach(groupRows) { row in
+                                HStack(alignment: .top, spacing: 6) {
+                                    Circle()
+                                        .fill(Color(hex: row.colorHex))
+                                        .frame(width: 8, height: 8)
+                                        .padding(.top, 4)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(row.categoryName)
+                                            .font(.caption.bold())
+                                            .foregroundStyle(Color.cwTextPrimary)
+                                        Text(row.subRows.map { $0.categoryName }.joined(separator: ", "))
+                                            .font(.caption2)
+                                            .foregroundStyle(Color.cwTextSecondary)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.top, 4)
+                    }
                 }
             }
             .padding(CWSpacing.md)
