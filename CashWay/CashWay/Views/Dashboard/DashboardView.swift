@@ -108,16 +108,19 @@ struct DashboardView: View {
                 )
 
             VStack(spacing: CWSpacing.sm) {
-                Text("Saldo Bulan Ini")
+                // Label menjelaskan ini saldo akumulatif lintas bulan
+                Text("Total Saldo")
                     .font(.caption)
                     .foregroundStyle(Color.cwTextSecondary)
 
+                // Angka utama: kumulatif dari semua bulan s.d. bulan ini
                 AnimatedNumberText(
-                    value: vm.netBalance,
-                    color: vm.netBalance >= 0 ? Color.cwIncome : Color.cwExpense,
+                    value: vm.cumulativeBalance,
+                    color: vm.cumulativeBalance >= 0 ? Color.cwIncome : Color.cwExpense,
                     font: .system(size: 36, weight: .bold, design: .rounded)
                 )
 
+                // Badge Masuk / Keluar tetap menampilkan aktivitas bulan ini saja
                 HStack(spacing: CWSpacing.lg) {
                     statPill(label: "Masuk", amount: vm.totalIncome,   icon: "arrow.down", color: .cwIncome)
                     statPill(label: "Keluar", amount: vm.totalExpense, icon: "arrow.up",   color: .cwExpense)

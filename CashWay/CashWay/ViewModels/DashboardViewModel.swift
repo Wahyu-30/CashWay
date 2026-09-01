@@ -74,7 +74,30 @@ final class DashboardViewModel {
         monthTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
     }
 
+    // Saldo bulanan saja (pemasukan - pengeluaran bulan ini)
     var netBalance: Decimal { totalIncome - totalExpense }
+
+    // Saldo kumulatif: akumulasi SEMUA transaksi dari awal hingga akhir bulan terpilih.
+    // Ini yang ditampilkan sebagai angka utama di kartu saldo agar sisa bulan
+    // sebelumnya otomatis terbawa ke bulan berikutnya — tidak perlu input ulang.
+    var cumulativeBalance: Decimal {
+        let cal = Calendar.current
+        return allTransactions
+            .filter { tx in
+                let txYear  = cal.component(.year,  from: tx.date)
+                let txMonth = cal.component(.month, from: tx.date)
+                // Ambil semua transaksi sampai dengan akhir bulan yang dipilih
+                return txYear < selectedYear ||
+                       (txYear == selectedYear && txMonth <= selectedMonth)
+            }
+            .reduce(Decimal(0)) { result, tx in
+                switch tx.type {
+                case .income:   return result + tx.amount
+                case .expense:  return result - tx.amount
+                case .transfer: return result
+                }
+            }
+    }
 
     // MARK: - Recent Transactions (5 terakhir)
     var recentTransactions: [Transaction] {
