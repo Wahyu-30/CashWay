@@ -210,23 +210,37 @@ struct ReportsView: View {
                 spendingMap[catId] = (name: name, colorHex: color, amount: item.tx.amount)
             }
         }
-        var handled: Set<String> = []
+        var handledCatIds: Set<String> = []
         var newBudgetRows: [BudgetTableRow] = []
+        
         for b in monthBudgets {
-            let catId = b.category?.id ?? ""
-            handled.insert(catId)
+            let catIds = b.allCategoryIds
+            // Tandai semua kategori dalam budget group ini sudah di-handle
+            catIds.forEach { handledCatIds.insert($0) }
+            
+            // Jumlahkan total dari map (ini mirip dgn yg dilakukan DataStore, tapi manual)
+            let totalSpent = catIds.reduce(Decimal(0)) { $0 + (spendingMap[$1]?.amount ?? 0) }
+            
             newBudgetRows.append(BudgetTableRow(
-                id:           catId.isEmpty ? UUID().uuidString : catId,
-                categoryName: b.category?.name     ?? "Lainnya",
-                colorHex:     b.category?.colorHex ?? "#8B8FA8",
+                id:           b.id, // ID budget
+                categoryName: b.groupName ?? b.category?.name ?? "Anggaran",
+                colorHex:     (b.groupName != nil) ? "#00C9A7" : (b.category?.colorHex ?? "#8B8FA8"),
                 budgeted:     b.amount,
-                spent:        spendingMap[catId]?.amount ?? 0))
+                spent:        totalSpent
+            ))
         }
-        for (catId, info) in spendingMap where !handled.contains(catId) {
+        
+        // Sisa kategori yang belum tercakup di budget manapun
+        for (catId, info) in spendingMap where !handledCatIds.contains(catId) {
             newBudgetRows.append(BudgetTableRow(
-                id: catId, categoryName: info.name,
-                colorHex: info.colorHex, budgeted: nil, spent: info.amount))
+                id: catId, 
+                categoryName: info.name,
+                colorHex: info.colorHex, 
+                budgeted: nil, 
+                spent: info.amount
+            ))
         }
+        
         newBudgetRows.sort {
             let aH = $0.budgeted != nil; let bH = $1.budgeted != nil
             if aH != bH { return aH }
