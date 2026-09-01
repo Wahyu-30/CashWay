@@ -6,7 +6,7 @@ import Foundation
 // Berisi kategori preset dan wallet default.
 // ============================================================
 
-struct DefaultData {
+nonisolated struct DefaultData {
 
     // MARK: - Expense Categories
     static var expenseCategories: [(name: String, icon: String, color: String, order: Int)] {[

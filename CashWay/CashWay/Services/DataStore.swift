@@ -37,6 +37,9 @@ class DataStore: ObservableObject {
             print("DataStore: Tidak ada pengguna yang login, skip fetching.")
             return
         }
+        // onAppear dan perubahan status auth dapat sama-sama memanggil method ini.
+        // Hentikan listener lama agar satu akun hanya memiliki satu listener per koleksi.
+        stopListening()
         fetchCategories()
         fetchWallets()
         fetchTransactions()
@@ -46,9 +49,7 @@ class DataStore: ObservableObject {
     
     // Matikan SEMUA listener aktif dan hapus data dari layar saat logout
     func clearData() {
-        // Cabut semua listener Firestore — mencegah listener lama "menghantui" sesi baru
-        listeners.forEach { $0.remove() }
-        listeners.removeAll()
+        stopListening()
         
         transactions = []
         categories = []
@@ -56,9 +57,14 @@ class DataStore: ObservableObject {
         budgets = []
         savingsGoals = []
     }
+
+    private func stopListening() {
+        listeners.forEach { $0.remove() }
+        listeners.removeAll()
+    }
     
     // MARK: - Generic Fetcher (tanpa order di Firestore — hindari composite index)
-    private func fetchCollection<T: Codable>(collection: String, completion: @escaping ([T]) -> Void) {
+    private func fetchCollection<T: Decodable>(collection: String, completion: @escaping ([T]) -> Void) {
         guard let uid = currentUserId else { return }
         let listener = db.collection(collection)
             .whereField("userId", isEqualTo: uid)
@@ -133,7 +139,7 @@ class DataStore: ObservableObject {
     }
     
     // MARK: - Writers
-    private func saveDocument<T: Codable>(collection: String, id: String, data: T) {
+    private func saveDocument<T: Encodable>(collection: String, id: String, data: T) {
         do {
             try db.collection(collection).document(id).setData(from: data)
         } catch {
@@ -196,81 +202,94 @@ class DataStore: ObservableObject {
     }
 
     // MARK: - Deduplication + Restore
-    // 1. Hapus semua duplikat kategori & wallet (nama sama = duplikat)
-    // 2. Hapus dokumen lama yang tidak punya field userId (ghost data)
-    // 3. Kembalikan default wallet yang hilang
-    func cleanupDuplicates(completion: @escaping (Int) -> Void) {
-        guard let uid = currentUserId else { completion(0); return }
-        let group = DispatchGroup()
-        var totalDeleted = 0
+    /// Membersihkan hanya data milik pengguna aktif. Kategori dibedakan oleh
+    /// nama + tipe agar kategori "Lainnya" untuk pemasukan dan pengeluaran tidak
+    /// saling terhapus. Dokumen pengguna lain maupun dokumen lama tanpa userId
+    /// tidak pernah disentuh.
+    func cleanupDuplicates() async -> Int {
+        guard let uid = currentUserId else { return 0 }
 
-        // --- Deduplikasi Kategori ---
-        group.enter()
-        db.collection("categories")
-            .getDocuments { snapshot, _ in
-                guard let docs = snapshot?.documents else { group.leave(); return }
-                var seen: [String: Bool] = [:]
-                for doc in docs {
-                    let docUserId = doc.data()["userId"] as? String ?? ""
-                    let name      = doc.data()["name"] as? String ?? doc.documentID
+        do {
+            let categories = try await db.collection("categories")
+                .whereField("userId", isEqualTo: uid)
+                .getDocuments()
+            let wallets = try await db.collection("wallets")
+                .whereField("userId", isEqualTo: uid)
+                .getDocuments()
 
-                    // Hapus ghost document (tidak punya userId atau beda user)
-                    if docUserId != uid {
-                        doc.reference.delete()
-                        totalDeleted += 1
-                        continue
-                    }
-                    // Hapus duplikat (nama sama sudah pernah disimpan)
-                    if seen[name] != nil {
-                        doc.reference.delete()
-                        totalDeleted += 1
-                    } else {
-                        seen[name] = true
-                    }
+            let categoryDuplicates = duplicateDocuments(
+                in: categories.documents,
+                key: { document in
+                    let data = document.data()
+                    let name = data["name"] as? String ?? document.documentID
+                    let type = data["type"] as? String ?? ""
+                    return "\(type)|\(name)"
                 }
-                group.leave()
+            )
+            let walletDuplicates = duplicateDocuments(
+                in: wallets.documents,
+                key: { document in
+                    document.data()["name"] as? String ?? document.documentID
+                }
+            )
+
+            let existingWalletNames = Set(wallets.documents.compactMap {
+                $0.data()["name"] as? String
+            })
+
+            let missingDefaultWallets = DefaultData.defaultWallets.enumerated().filter {
+                !existingWalletNames.contains($0.element.name)
             }
 
-        // --- Deduplikasi Wallet ---
-        group.enter()
-        db.collection("wallets")
-            .getDocuments { [weak self] snapshot, _ in
-                guard let self, let docs = snapshot?.documents else { group.leave(); return }
-                var seen: [String: Bool] = [:]
-                var keptNames: Set<String> = []
-
-                for doc in docs {
-                    let docUserId = doc.data()["userId"] as? String ?? ""
-                    let name      = doc.data()["name"] as? String ?? doc.documentID
-
-                    if docUserId != uid {
-                        doc.reference.delete()
-                        totalDeleted += 1
-                        continue
-                    }
-                    if seen[name] != nil {
-                        doc.reference.delete()
-                        totalDeleted += 1
-                    } else {
-                        seen[name] = true
-                        keptNames.insert(name)
-                    }
-                }
-
-                // Kembalikan default wallet yang hilang
-                let defaults = DefaultData.defaultWallets
-                for (idx, def) in defaults.enumerated() where !keptNames.contains(def.name) {
-                    var w = Wallet(name: def.name, type: def.type, icon: def.icon,
-                                   colorHex: def.color, initialBalance: 0,
-                                   isDefault: def.isDefault, sortOrder: idx)
-                    w.userId = uid
-                    self.saveDocument(collection: "wallets", id: w.id, data: w)
-                }
-                group.leave()
+            let batch = db.batch()
+            for document in categoryDuplicates + walletDuplicates {
+                batch.deleteDocument(document.reference)
             }
 
-        group.notify(queue: .main) {
-            completion(totalDeleted)
+            // Restorasi hanya jika wallet default benar-benar tidak ada. ID yang
+            // deterministik membuat operasi aman bila pengguna menekan tombol lagi.
+            for (index, item) in missingDefaultWallets {
+                let wallet = Wallet(
+                    id: defaultDocumentID(userId: uid, kind: "wallet", index: index),
+                    userId: uid,
+                    name: item.name,
+                    type: item.type,
+                    icon: item.icon,
+                    colorHex: item.color,
+                    initialBalance: 0,
+                    isDefault: item.isDefault,
+                    sortOrder: index
+                )
+                try batch.setData(from: wallet, forDocument: db.collection("wallets").document(wallet.id))
+            }
+
+            // Tidak kirim write kosong; ini menghindari perubahan database saat
+            // tidak ada duplikat atau wallet yang hilang.
+            if !categoryDuplicates.isEmpty || !walletDuplicates.isEmpty ||
+                !missingDefaultWallets.isEmpty {
+                try await batch.commit()
+            }
+
+            return categoryDuplicates.count + walletDuplicates.count
+        } catch {
+            print("DataStore: Gagal membersihkan data duplikat — \(error.localizedDescription)")
+            return 0
         }
+    }
+
+    private func duplicateDocuments(
+        in documents: [QueryDocumentSnapshot],
+        key: (QueryDocumentSnapshot) -> String
+    ) -> [QueryDocumentSnapshot] {
+        let grouped = Dictionary(grouping: documents, by: key)
+        return grouped.values.flatMap { group in
+            // ID dokumen dipakai sebagai tie-breaker sehingga data yang dipertahankan
+            // selalu konsisten dan tidak bergantung urutan respons Firestore.
+            group.sorted { $0.documentID < $1.documentID }.dropFirst()
+        }
+    }
+
+    private func defaultDocumentID(userId: String, kind: String, index: Int) -> String {
+        "\(userId)_default_\(kind)_\(index)"
     }
 }

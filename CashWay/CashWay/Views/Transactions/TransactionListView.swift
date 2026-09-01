@@ -29,6 +29,24 @@ struct TransactionListView: View {
         .sheet(item: $vm.editingTransaction) { transaction in
             AddTransactionView(editingTransaction: transaction)
         }
+        .alert("Hapus Transaksi?", isPresented: Binding(
+            get: { vm.deletingTransaction != nil },
+            set: { if !$0 { vm.deletingTransaction = nil } }
+        )) {
+            Button("Hapus", role: .destructive) {
+                if let tx = vm.deletingTransaction {
+                    vm.delete(tx, dataStore: dataStore)
+                    vm.deletingTransaction = nil
+                }
+            }
+            Button("Batal", role: .cancel) {
+                vm.deletingTransaction = nil
+            }
+        } message: {
+            if let tx = vm.deletingTransaction {
+                Text("\(tx.category?.name ?? "Transaksi ini") sebesar \(CurrencyFormatter.format(tx.amount)) akan dihapus permanen.")
+            }
+        }
     }
 
     // MARK: - List Content
@@ -52,9 +70,9 @@ struct TransactionListView: View {
                                 TransactionRowView(transaction: transaction)
                             }
                             .listRowBackground(Color.cwSurface)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    vm.delete(transaction, dataStore: dataStore)
+                                    vm.deletingTransaction = transaction
                                 } label: {
                                     Label("Hapus", systemImage: "trash")
                                 }

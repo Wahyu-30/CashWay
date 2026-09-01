@@ -315,18 +315,24 @@ struct ReportsView: View {
     }
 
     private var budgetTableHeader: some View {
-        HStack(spacing: 8) {
-            Text("Kategori Pengeluaran")
+        HStack(spacing: 4) {
+            Text("Kategori")
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text("Anggaran 💰")
-                .frame(width: 85, alignment: .trailing)
-            Text("Realisasi 🔧")
-                .frame(width: 85, alignment: .trailing)
+                .lineLimit(1)
+            Text("Anggaran")
+                .frame(width: 68, alignment: .trailing)
+                .lineLimit(1)
+            Text("Realisasi")
+                .frame(width: 68, alignment: .trailing)
+                .lineLimit(1)
             Text("Progres")
-                .frame(width: 90, alignment: .leading)
+                .frame(width: 58, alignment: .leading)
+                .lineLimit(1)
             Text("% Pakai")
-                .frame(width: 52, alignment: .trailing)
+                .frame(width: 44, alignment: .trailing)
+                .lineLimit(1)
         }
+        .minimumScaleFactor(0.75)
         .font(.caption.bold())
         .foregroundStyle(.white)
         .padding(.horizontal, CWSpacing.md)
@@ -335,14 +341,14 @@ struct ReportsView: View {
     }
 
     private func budgetTableRow(_ row: BudgetTableRow, isEven: Bool) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 4) {
             // Kategori
             HStack(spacing: 6) {
                 Circle()
                     .fill(Color(hex: row.colorHex))
                     .frame(width: 8, height: 8)
                 Text(row.categoryName)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(Color.cwTextPrimary)
                     .lineLimit(1)
             }
@@ -352,13 +358,15 @@ struct ReportsView: View {
             Text(row.budgeted != nil ? CurrencyFormatter.formatShort(row.budgeted!) : "-")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(Color.cwTextSecondary)
-                .frame(width: 85, alignment: .trailing)
+                .frame(width: 68, alignment: .trailing)
+                .lineLimit(1)
 
             // Realisasi
             Text(CurrencyFormatter.formatShort(row.spent))
                 .font(.caption.bold().monospacedDigit())
                 .foregroundStyle(row.isOverBudget ? Color(hex: "#FF6B6B") : Color.cwTextPrimary)
-                .frame(width: 85, alignment: .trailing)
+                .frame(width: 68, alignment: .trailing)
+                .lineLimit(1)
 
             // Progress Bar
             GeometryReader { geo in
@@ -370,13 +378,14 @@ struct ReportsView: View {
                         .frame(width: geo.size.width * min(row.progress, 1.0))
                 }
             }
-            .frame(width: 90, height: 10)
+            .frame(width: 58, height: 10)
 
             // Persentase
-            Text(row.budgeted != nil ? String(format: "%.2f%%", row.percentage) : "-")
+            Text(row.budgeted != nil ? String(format: "%.1f%%", row.percentage) : "-")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(row.isOverBudget ? Color(hex: "#FF6B6B") : Color.cwTextSecondary)
-                .frame(width: 52, alignment: .trailing)
+                .frame(width: 44, alignment: .trailing)
+                .lineLimit(1)
         }
         .padding(.horizontal, CWSpacing.md)
         .padding(.vertical, 10)

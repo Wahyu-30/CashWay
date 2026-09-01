@@ -1,6 +1,6 @@
 import Foundation
 
-struct Transaction: Identifiable, Codable, Equatable, Hashable {
+nonisolated struct Transaction: Identifiable, Codable, Equatable, Hashable {
     
     enum IncomeTag: String, Codable, CaseIterable {
         case salary = "Gaji Utama"

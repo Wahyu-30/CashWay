@@ -129,15 +129,44 @@ struct CashWayApp: App {
             // Belum ada data → lakukan seeding di MainActor
             await MainActor.run {
                 dataStore.seedCategories(DefaultData.expenseCategories.enumerated().map {
-                    Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .expense, isDefault: true, sortOrder: $0)
+                    Category(
+                        id: CashWayApp.defaultSeedDocumentID(userId: uid, kind: "expense-category", index: $0),
+                        name: $1.name,
+                        icon: $1.icon,
+                        colorHex: $1.color,
+                        type: .expense,
+                        isDefault: true,
+                        sortOrder: $0
+                    )
                 })
                 dataStore.seedCategories(DefaultData.incomeCategories.enumerated().map {
-                    Category(name: $1.name, icon: $1.icon, colorHex: $1.color, type: .income, isDefault: true, sortOrder: $0)
+                    Category(
+                        id: CashWayApp.defaultSeedDocumentID(userId: uid, kind: "income-category", index: $0),
+                        name: $1.name,
+                        icon: $1.icon,
+                        colorHex: $1.color,
+                        type: .income,
+                        isDefault: true,
+                        sortOrder: $0
+                    )
                 })
                 dataStore.seedWallets(DefaultData.defaultWallets.enumerated().map {
-                    Wallet(name: $1.name, type: $1.type, icon: $1.icon, colorHex: $1.color, initialBalance: 0, isDefault: $1.isDefault, sortOrder: $0)
+                    Wallet(
+                        id: CashWayApp.defaultSeedDocumentID(userId: uid, kind: "wallet", index: $0),
+                        name: $1.name,
+                        type: $1.type,
+                        icon: $1.icon,
+                        colorHex: $1.color,
+                        initialBalance: 0,
+                        isDefault: $1.isDefault,
+                        sortOrder: $0
+                    )
                 })
             }
         }
+    }
+
+    private static func defaultSeedDocumentID(userId: String, kind: String, index: Int) -> String {
+        "\(userId)_default_\(kind)_\(index)"
     }
 }

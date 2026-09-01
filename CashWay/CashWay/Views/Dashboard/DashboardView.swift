@@ -18,7 +18,8 @@ struct DashboardView: View {
             VStack(spacing: CWSpacing.lg) {
                 SlideInCard(index: 0) { headerSection }
                 
-                if let days = vm.daysUntilExpiration {
+                // Tampilkan peringatan sertifikat HANYA di hari ke-6 & ke-7 (≤1 hari tersisa)
+                if let days = vm.daysUntilExpiration, days <= 1 {
                     SlideInCard(index: 1) { expirationBanner(days: days) }
                 }
                 

@@ -1,13 +1,15 @@
 import Foundation
 
-enum WalletType: String, Codable {
+// Firestore meng-encode/decode model ini di luar MainActor. Tetap eksplisit
+// nonisolated walaupun target memakai default actor isolation = MainActor.
+nonisolated enum WalletType: String, Codable {
     case cash = "cash"
     case bank = "bank"
     case ewallet = "ewallet"
     case credit = "credit"
 }
 
-struct Wallet: Identifiable, Codable, Equatable, Hashable {
+nonisolated struct Wallet: Identifiable, Codable, Equatable, Hashable {
     var id: String
     var userId: String       // Stempel pemilik: UID Google pengguna
     var name: String

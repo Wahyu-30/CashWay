@@ -1,6 +1,6 @@
 import Foundation
 
-struct SavingsGoal: Identifiable, Codable, Equatable, Hashable {
+nonisolated struct SavingsGoal: Identifiable, Codable, Equatable, Hashable {
     var id: String
     var userId: String       // Stempel pemilik: UID Google pengguna
     var name: String

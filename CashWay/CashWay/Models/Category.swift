@@ -1,11 +1,11 @@
 import Foundation
 
-enum CategoryType: String, Codable {
+nonisolated enum CategoryType: String, Codable {
     case income = "income"
     case expense = "expense"
 }
 
-struct Category: Identifiable, Codable, Equatable, Hashable {
+nonisolated struct Category: Identifiable, Codable, Equatable, Hashable {
     var id: String
     var userId: String       // Stempel pemilik: UID Google pengguna
     var name: String

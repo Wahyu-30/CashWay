@@ -1,6 +1,6 @@
 import Foundation
 
-struct Budget: Identifiable, Codable, Equatable, Hashable {
+nonisolated struct Budget: Identifiable, Codable, Equatable, Hashable {
     var id: String
     var userId: String       // Stempel pemilik: UID Google pengguna
     var amount: Decimal

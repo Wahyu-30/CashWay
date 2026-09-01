@@ -254,7 +254,8 @@ struct SettingsView: View {
             // --- Tombol Bersihkan Duplikat ---
             Button {
                 isCleaningUp = true
-                dataStore.cleanupDuplicates { count in
+                Task {
+                    let count = await dataStore.cleanupDuplicates()
                     isCleaningUp = false
                     cleanupResult = count > 0
                         ? "Berhasil menghapus \(count) data duplikat. Tampilan sudah rapi! ✅"
