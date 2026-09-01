@@ -15,6 +15,7 @@ struct BudgetView: View {
     @State private var showAddBudget: Bool = false
     @State private var showWizard: Bool = false
     @State private var editingBudget: Budget? = nil
+    @State private var deletingBudget: Budget? = nil   // konfirmasi sebelum hapus
 
     private var monthBudgets: [Budget] {
         dataStore.budgets.filter { $0.month == selectedMonth && $0.year == selectedYear }
@@ -27,7 +28,7 @@ struct BudgetView: View {
         ScrollView {
             VStack(spacing: CWSpacing.md) {
                 monthNavigator
-                
+
                 Button { showWizard = true } label: {
                     HStack {
                         Image(systemName: "wand.and.stars")
@@ -40,7 +41,7 @@ struct BudgetView: View {
                     .foregroundStyle(.white)
                 }
                 .buttonStyle(.plain)
-                
+
                 overallSummary
                 if monthBudgets.isEmpty { emptyState } else { budgetList }
             }
@@ -65,6 +66,23 @@ struct BudgetView: View {
                 income: calculateIncome(),
                 expenseData: calculateHistoricalData()
             )
+        }
+        // Konfirmasi hapus budget
+        .alert("Hapus Budget?", isPresented: Binding(
+            get: { deletingBudget != nil },
+            set: { if !$0 { deletingBudget = nil } }
+        )) {
+            Button("Hapus", role: .destructive) {
+                if let b = deletingBudget {
+                    dataStore.deleteBudget(b)
+                    deletingBudget = nil
+                }
+            }
+            Button("Batal", role: .cancel) { deletingBudget = nil }
+        } message: {
+            if let b = deletingBudget {
+                Text("Budget \"\(b.groupName ?? b.category?.name ?? "ini")\" akan dihapus. Laporan akan otomatis terupdate.")
+            }
         }
     }
     
@@ -172,14 +190,20 @@ struct BudgetView: View {
         VStack(spacing: CWSpacing.sm) {
             ForEach(Array(monthBudgets.enumerated()), id: \.element.id) { index, budget in
                 SlideInCard(index: index) {
-                    BudgetRowView(budget: budget, allCategories: dataStore.categories)
-                        .onTapGesture { editingBudget = budget }
-                        .contextMenu {
-                            Button("Edit") { editingBudget = budget }
-                            Button("Hapus", role: .destructive) {
-                                dataStore.deleteBudget(budget)
-                            }
+                    BudgetRowView(
+                        budget: budget,
+                        allCategories: dataStore.categories,
+                        onDelete: { deletingBudget = budget }
+                    )
+                    .onTapGesture { editingBudget = budget }
+                    // Mac: klik kanan
+                    .contextMenu {
+                        Button("Edit") { editingBudget = budget }
+                        Divider()
+                        Button("Hapus", role: .destructive) {
+                            deletingBudget = budget
                         }
+                    }
                 }
             }
         }
@@ -225,6 +249,8 @@ struct BudgetRowView: View {
     let budget: Budget
     // Semua kategori dari DataStore — untuk lookup nama kategori tambahan di group
     var allCategories: [Category] = []
+    // Callback hapus — jika nil, tombol hapus disembunyikan
+    var onDelete: (() -> Void)? = nil
 
     // Kategori tambahan (selain primary) yang masuk dalam group budget
     private var extraCategories: [Category] {
@@ -263,8 +289,21 @@ struct BudgetRowView: View {
                     }
                 }
                 Spacer()
-                // Status badge
-                statusBadge
+                HStack(spacing: CWSpacing.sm) {
+                    // Status badge
+                    statusBadge
+                    // Tombol hapus — terlihat langsung di kartu (iOS friendly)
+                    if let onDelete {
+                        Button(action: onDelete) {
+                            Image(systemName: "trash")
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.cwExpense)
+                                .padding(6)
+                                .background(Color.cwExpense.opacity(0.12), in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
 
             // Amount info
