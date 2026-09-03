@@ -62,7 +62,8 @@ nonisolated struct Transaction: Identifiable, Codable, Equatable, Hashable {
     var note: String
     
     var category: Category?
-    var wallet: Wallet?
+    var wallet: Wallet?        // Untuk Transfer: Ini adalah dompet "Sumber" (Dari)
+    var toWallet: Wallet?      // Untuk Transfer: Ini adalah dompet "Tujuan" (Ke)
     var incomeTag: IncomeTag?
     
     var createdAt: Date
@@ -76,6 +77,7 @@ nonisolated struct Transaction: Identifiable, Codable, Equatable, Hashable {
         note: String = "",
         category: Category? = nil,
         wallet: Wallet? = nil,
+        toWallet: Wallet? = nil,
         incomeTag: IncomeTag? = nil,
         createdAt: Date = .now
     ) {
@@ -87,6 +89,7 @@ nonisolated struct Transaction: Identifiable, Codable, Equatable, Hashable {
         self.note = note
         self.category = category
         self.wallet = wallet
+        self.toWallet = toWallet
         self.incomeTag = incomeTag
         self.createdAt = createdAt
     }

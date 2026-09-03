@@ -20,6 +20,7 @@ final class DashboardViewModel {
     // Data dari @Query di View — di-update via update()
     private var allTransactions: [Transaction] = []
     private var allBudgets:      [Budget]      = []
+    private var allWallets:      [Wallet]      = []
 
     var daysUntilExpiration: Int? {
         guard let expiry = ProvisioningInfo.expirationDate() else { return nil }
@@ -116,6 +117,37 @@ final class DashboardViewModel {
                 case .transfer: return result
                 }
             }
+    }
+
+    // MARK: - Wallet Balances
+    var walletBalances: [(wallet: Wallet, balance: Decimal)] {
+        let cal = Calendar.current
+        
+        return allWallets.map { wallet in
+            let balance = allTransactions
+                .filter { tx in
+                    let txYear  = cal.component(.year,  from: tx.date)
+                    let txMonth = cal.component(.month, from: tx.date)
+                    return txYear < selectedYear || (txYear == selectedYear && txMonth <= selectedMonth)
+                }
+                .reduce(wallet.initialBalance) { result, tx in
+                    var newResult = result
+                    if tx.type == .income && tx.wallet?.id == wallet.id {
+                        newResult += tx.amount
+                    } else if tx.type == .expense && tx.wallet?.id == wallet.id {
+                        newResult -= tx.amount
+                    } else if tx.type == .transfer {
+                        if tx.wallet?.id == wallet.id {
+                            newResult -= tx.amount // Uang keluar dari dompet ini
+                        }
+                        if tx.toWallet?.id == wallet.id {
+                            newResult += tx.amount // Uang masuk ke dompet ini
+                        }
+                    }
+                    return newResult
+                }
+            return (wallet: wallet, balance: balance)
+        }
     }
 
     // MARK: - Recent Transactions (5 terakhir)
@@ -215,9 +247,10 @@ final class DashboardViewModel {
     }
 
     // MARK: - Update
-    func update(transactions: [Transaction], budgets: [Budget]) {
+    func update(transactions: [Transaction], budgets: [Budget], wallets: [Wallet]) {
         allTransactions = transactions
         allBudgets      = budgets
+        allWallets      = wallets
     }
 
     // MARK: - Private

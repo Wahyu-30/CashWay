@@ -23,7 +23,7 @@ struct AddTransactionView: View {
                     typeToggle
                     amountInput
                     if vm.selectedType == .income { incomeTagPicker }
-                    categoryPicker
+                    if vm.selectedType != .transfer { categoryPicker }
                     walletPicker
                     datePicker
                     noteField
@@ -54,11 +54,12 @@ struct AddTransactionView: View {
         .onAppear { setup() }
     }
 
-    // MARK: - Type Toggle (Pengeluaran / Pemasukan)
+    // MARK: - Type Toggle (Pengeluaran / Pemasukan / Transfer)
     private var typeToggle: some View {
         Picker("Tipe", selection: $vm.selectedType) {
             Text("Pengeluaran").tag(Transaction.TransactionType.expense)
             Text("Pemasukan").tag(Transaction.TransactionType.income)
+            Text("Transfer").tag(Transaction.TransactionType.transfer)
         }
         .pickerStyle(.segmented)
         .onChange(of: vm.selectedType) { vm.selectedCategory = nil }
@@ -189,24 +190,51 @@ struct AddTransactionView: View {
 
     // MARK: - Wallet Picker
     private var walletPicker: some View {
-        VStack(alignment: .leading, spacing: CWSpacing.sm) {
-            Text("Dari / Ke Dompet")
-                .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
+        VStack(spacing: CWSpacing.lg) {
+            VStack(alignment: .leading, spacing: CWSpacing.sm) {
+                Text(vm.selectedType == .transfer ? "Dari Dompet (Sumber)" : (vm.selectedType == .income ? "Simpan Ke Dompet" : "Gunakan Dompet"))
+                    .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: CWSpacing.sm) {
-                    ForEach(dataStore.wallets) { wallet in
-                        walletChip(wallet)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: CWSpacing.sm) {
+                        ForEach(dataStore.wallets) { wallet in
+                            walletChip(wallet, isSource: true)
+                        }
+                    }
+                }
+            }
+            
+            if vm.selectedType == .transfer {
+                VStack(alignment: .leading, spacing: CWSpacing.sm) {
+                    Text("Ke Dompet (Tujuan)")
+                        .font(.subheadline).foregroundStyle(Color.cwTextSecondary)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: CWSpacing.sm) {
+                            ForEach(dataStore.wallets) { wallet in
+                                walletChip(wallet, isSource: false)
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    private func walletChip(_ wallet: Wallet) -> some View {
-        let isSelected = vm.selectedWallet?.id == wallet.id
+    private func walletChip(_ wallet: Wallet, isSource: Bool) -> some View {
+        let isSelected = isSource ? (vm.selectedWallet?.id == wallet.id) : (vm.selectedToWallet?.id == wallet.id)
+        // Jangan izinkan pilih dompet tujuan yang sama dengan sumber
+        let isDisabled = !isSource && vm.selectedWallet?.id == wallet.id
+        
         return Button {
-            vm.selectedWallet = wallet
+            if isSource {
+                vm.selectedWallet = wallet
+                if vm.selectedToWallet?.id == wallet.id {
+                    vm.selectedToWallet = nil // reset jika sama
+                }
+            } else {
+                vm.selectedToWallet = wallet
+            }
         } label: {
             HStack(spacing: CWSpacing.xs) {
                 Image(systemName: wallet.icon)
@@ -225,8 +253,10 @@ struct AddTransactionView: View {
                 RoundedRectangle(cornerRadius: CWRadius.sm)
                     .stroke(Color(hex: wallet.colorHex).opacity(isSelected ? 0 : 0.4), lineWidth: 1)
             )
+            .opacity(isDisabled ? 0.4 : 1.0)
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
     }
 
     // MARK: - Date Picker

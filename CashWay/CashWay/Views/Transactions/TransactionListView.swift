@@ -301,14 +301,14 @@ struct TransactionRowView: View {
                 RoundedRectangle(cornerRadius: CWRadius.sm)
                     .fill(categoryColor.opacity(0.2))
                     .frame(width: 40, height: 40)
-                Image(systemName: transaction.category?.icon ?? "questionmark")
+                Image(systemName: transaction.type == .transfer ? "arrow.left.arrow.right" : (transaction.category?.icon ?? "questionmark"))
                     .foregroundStyle(categoryColor)
                     .font(.body)
             }
 
             // Info
             VStack(alignment: .leading, spacing: 2) {
-                Text(transaction.category?.name ?? "Tidak ada kategori")
+                Text(transaction.type == .transfer ? "Transfer Saldo" : (transaction.category?.name ?? "Tidak ada kategori"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.cwTextPrimary)
 
@@ -322,12 +322,18 @@ struct TransactionRowView: View {
                             .background(Color(hex: tag.colorHex).opacity(0.2), in: Capsule())
                             .foregroundStyle(Color(hex: tag.colorHex))
                     }
-                    if !transaction.note.isEmpty {
+                    
+                    if transaction.type == .transfer {
+                        Text("\(transaction.wallet?.name ?? "?") → \(transaction.toWallet?.name ?? "?")")
+                            .font(.caption)
+                            .foregroundStyle(Color.cwTextSecondary)
+                    } else if !transaction.note.isEmpty {
                         Text(transaction.note)
                             .font(.caption)
                             .foregroundStyle(Color.cwTextSecondary)
                             .lineLimit(1)
                     }
+                    
                     Text(transaction.date.formatted(.dateTime.hour().minute()))
                         .font(.caption)
                         .foregroundStyle(Color.cwPlaceholder)
@@ -346,7 +352,8 @@ struct TransactionRowView: View {
     }
 
     private var categoryColor: Color {
-        Color(hex: transaction.category?.colorHex ?? "#8B8FA8")
+        if transaction.type == .transfer { return Color.cwTextSecondary }
+        return Color(hex: transaction.category?.colorHex ?? "#8B8FA8")
     }
 
     private var amountColor: Color {

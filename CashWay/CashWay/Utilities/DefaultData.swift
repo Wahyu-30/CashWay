@@ -43,6 +43,7 @@ nonisolated struct DefaultData {
         ("Bank",   .bank,    "building.columns.fill", "#54A0FF", false),
         ("GoPay",  .ewallet, "g.circle.fill",         "#4CAF82", false),
         ("OVO",    .ewallet, "o.circle.fill",         "#A29BFE", false),
+        ("DANA",   .ewallet, "d.circle.fill",         "#1C6CFF", false),
     ]}
 
     // MARK: - Budget Recommendations

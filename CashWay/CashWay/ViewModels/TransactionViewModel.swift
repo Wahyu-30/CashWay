@@ -16,6 +16,7 @@ final class TransactionViewModel {
     var selectedType:  Transaction.TransactionType  = .expense
     var selectedCategory: Category?                 = nil
     var selectedWallet:   Wallet?                   = nil
+    var selectedToWallet: Wallet?                   = nil
     var selectedDate:     Date                      = .now
     var note:             String                    = ""
     var selectedIncomeTag: Transaction.IncomeTag    = .salary
@@ -34,7 +35,10 @@ final class TransactionViewModel {
     }
 
     var isValidForm: Bool {
-        amount > 0 && selectedCategory != nil && selectedWallet != nil
+        if selectedType == .transfer {
+            return amount > 0 && selectedWallet != nil && selectedToWallet != nil && selectedWallet?.id != selectedToWallet?.id
+        }
+        return amount > 0 && selectedCategory != nil && selectedWallet != nil
     }
 
     // MARK: - Filter Transactions
@@ -72,8 +76,9 @@ final class TransactionViewModel {
             // Update
             existing.amount   = amount
             existing.type     = selectedType
-            existing.category = selectedCategory
+            existing.category = selectedType == .transfer ? nil : selectedCategory
             existing.wallet   = selectedWallet
+            existing.toWallet = selectedType == .transfer ? selectedToWallet : nil
             existing.date     = selectedDate
             existing.note     = note
             existing.incomeTag = selectedType == .income ? selectedIncomeTag : nil
@@ -85,8 +90,9 @@ final class TransactionViewModel {
                 type:      selectedType,
                 date:      selectedDate,
                 note:      note,
-                category:  selectedCategory,
+                category:  selectedType == .transfer ? nil : selectedCategory,
                 wallet:    selectedWallet,
+                toWallet:  selectedType == .transfer ? selectedToWallet : nil,
                 incomeTag: selectedType == .income ? selectedIncomeTag : nil
             )
             dataStore.addTransaction(transaction)
@@ -120,6 +126,7 @@ final class TransactionViewModel {
         selectedType        = transaction.type
         selectedCategory    = transaction.category
         selectedWallet      = transaction.wallet
+        selectedToWallet    = transaction.toWallet
         selectedDate        = transaction.date
         note                = transaction.note
         selectedIncomeTag   = transaction.incomeTag ?? .salary

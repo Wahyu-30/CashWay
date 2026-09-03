@@ -24,6 +24,7 @@ struct DashboardView: View {
                 }
                 
                 SlideInCard(index: 2) { balanceCard }
+                SlideInCard(index: 2) { walletBreakdownSection }
                 SlideInCard(index: 2) { overspendingBanner }
                 SlideInCard(index: 3) { incomeBreakdownSection }
                 SlideInCard(index: 4) { chartSection }
@@ -54,7 +55,7 @@ struct DashboardView: View {
     }
 
     private func updateData() {
-        vm.update(transactions: dataStore.transactions, budgets: dataStore.budgets)
+        vm.update(transactions: dataStore.transactions, budgets: dataStore.budgets, wallets: dataStore.wallets)
     }
 
     // MARK: - Header
@@ -127,6 +128,32 @@ struct DashboardView: View {
                 }
             }
             .padding(CWSpacing.lg)
+        }
+    }
+    
+    // MARK: - Wallet Breakdown
+    private var walletBreakdownSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: CWSpacing.sm) {
+                ForEach(vm.walletBalances, id: \.wallet.id) { item in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: item.wallet.icon)
+                                .foregroundStyle(Color(hex: item.wallet.colorHex))
+                            Text(item.wallet.name)
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.cwTextPrimary)
+                        }
+                        Text(CurrencyFormatter.formatCompact(item.balance))
+                            .font(.subheadline.bold())
+                            .foregroundStyle(Color.cwTextSecondary)
+                            .monospacedDigit()
+                    }
+                    .padding(CWSpacing.md)
+                    .background(Color.cwSurface, in: RoundedRectangle(cornerRadius: CWRadius.md))
+                    .overlay(RoundedRectangle(cornerRadius: CWRadius.md).stroke(Color.cwBorder, lineWidth: 1))
+                }
+            }
         }
     }
 
