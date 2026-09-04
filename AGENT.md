@@ -106,24 +106,26 @@ Wizard **menghapus semua budget lama** bulan tersebut dulu, baru buat 2 group bu
 
 ---
 
-## Dashboard — Saldo Kumulatif
+## Dashboard — Saldo & Dompet Kumulatif
 
-`DashboardViewModel` memiliki dua properti saldo:
+`DashboardViewModel` memiliki properti saldo berikut:
 
 | Properti | Definisi | Digunakan di |
 |---|---|---|
 | `netBalance` | income - expense bulan ini | (internal, tidak ditampilkan utama) |
 | `cumulativeBalance` | Sum semua transaksi dari awal s.d. akhir bulan terpilih | Kartu utama "Total Saldo" |
+| `walletBalances` | Array `[(Wallet, Decimal)]` untuk saldo tiap dompet | Wallet Breakdown Section |
 
-Saldo otomatis terbawa antar bulan — tidak perlu input ulang. Badge Masuk/Keluar tetap menampilkan angka bulan berjalan.
+Saldo otomatis terbawa antar bulan — tidak perlu input ulang.
+**Logika Transfer:** Jika tipe `.transfer`, saldo dompet sumber (`wallet`) dikurangi, dan dompet tujuan (`toWallet`) ditambah. Transfer tidak memengaruhi Pemasukan atau Pengeluaran di laporan bulanan.
 
----
+## Halaman Transaksi — Filter Bulan & Transfer
 
-## Halaman Transaksi — Filter Bulan
-
-`TransactionListView` default menampilkan bulan saat ini:
+- **Form Tambah/Edit:** Segmented picker tipe: `[Pengeluaran, Pemasukan, Transfer]`. Jika `.transfer`, kategori nil dan muncul 2 dompet (Sumber & Tujuan).
+- `TransactionListView` default menampilkan bulan saat ini:
 - Navigasi `< Agustus 2026 >` di atas daftar.
 - Tombol "Semua Bulan" / "Bulan Ini" untuk toggle.
+- Transaksi Transfer ditampilkan spesifik dengan rute "Bank → Tunai" dan ikon 🔁.
 - **iOS**: swipe kiri → hapus (konfirmasi alert), swipe kanan → edit.
 - **Mac**: klik kanan → menu "Edit Transaksi" / "Hapus Transaksi".
 

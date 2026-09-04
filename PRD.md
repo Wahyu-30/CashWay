@@ -139,8 +139,9 @@ Membangun aplikasi keuangan pribadi yang memungkinkan pengguna:
 - userId: String          // UID Firebase Auth
 - amount: Decimal
 - type: TransactionType   // .income / .expense / .transfer
-- category: Category?     // snapshot kategori
-- wallet: Wallet?         // snapshot wallet
+- category: Category?     // snapshot kategori (nil jika type == transfer)
+- wallet: Wallet?         // sumber dompet (dari)
+- toWallet: Wallet?       // tujuan dompet (ke) - khusus untuk transfer
 - date: Date
 - note: String?
 - incomeTag: IncomeTag?   // .salary / .business / .parents / .other

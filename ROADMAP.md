@@ -62,9 +62,10 @@ v2.0 → Kolaborasi & Import CSV Rekening Koran + Advanced Analytics
 **Status: SELESAI**
 
 ### Wallet
-- Multi-wallet: Tunai, Bank, GoPay, OVO
+- Multi-wallet: Tunai, Bank, GoPay, DANA
 - Saldo per wallet (real-time dari transaksi)
 - Add / Edit wallet
+- **Transfer antar wallet** (Pindah dana antar rekening tanpa masuk Pemasukan/Pengeluaran)
 
 ### Budget
 - Budget per kategori per bulan
@@ -148,7 +149,6 @@ v2.0 → Kolaborasi & Import CSV Rekening Koran + Advanced Analytics
 | Siri Shortcut "Tambah pengeluaran Rp X" | 1 minggu | |
 | Face ID / Touch ID lock | 3 hari | |
 | macOS Menu Bar widget | 1 minggu | |
-| Transfer antar wallet | 3 hari | |
 
 ---
 
